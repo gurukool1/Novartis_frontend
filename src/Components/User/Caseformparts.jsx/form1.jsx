@@ -10,7 +10,11 @@ import { setAlert } from "../../../Redux/Actions/AlertActions";
 
 const makeKey = (section, visit) => `${section}_${visit}`;
 
-export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT }) {
+export default function Form1({
+  visit = "initial",
+  readOnly = false,
+  FORM_COUNT,
+}) {
   const dispatch = useDispatch();
   const ROWS = [
     { header: "Proximal Muscles" },
@@ -28,7 +32,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
   const key = makeKey("MMT_8", visit);
 
   const saved = useSelector(selectSectionData(key));
-  const [scores, setScores] = useState(() => saved || {} );
+  const [scores, setScores] = useState(() => saved || {});
   useEffect(() => {
     if (saved && Object.keys(saved).length > 0) {
       if (JSON.stringify(saved) !== JSON.stringify(scores)) {
@@ -39,9 +43,8 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
   // useEffect(() => {
   //   if (saved !== scores) setScores(saved);
   // }, [saved]);
-  
+
   const isInitial = visit === "initial";
-  
 
   // const handleChange = (muscle, side) => (e) => {
   //   setScores((prev) => ({ ...prev, [`${muscle}.${side}`]: e.target.value }));
@@ -49,7 +52,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
 
   const calculateTotalFields = (rows) => {
     let total = 1;
-    rows.forEach(row => {
+    rows.forEach((row) => {
       if (row.cols) {
         total += row.cols.length;
       }
@@ -76,20 +79,20 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
       const score = scores[muscleAndSide];
       if (!score || score === "NA") continue;
 
-      const side = muscleAndSide.split('.')[1];
+      const side = muscleAndSide.split(".")[1];
       perSide[side] += Number(score);
     }
 
     return {
       perSide,
-      total: perSide.right + perSide.left + perSide.axial
+      total: perSide.right + perSide.left + perSide.axial,
     };
   };
-  
+
   const totalFields = calculateTotalFields(ROWS);
   const filledFields = calculateFilledFields(scores);
 
-  const percentFilled = (filledFields / totalFields) * 100 / FORM_COUNT;
+  const percentFilled = ((filledFields / totalFields) * 100) / FORM_COUNT;
   // Calculate summary
   const summary = calculateSummary(scores);
   // const total = summary.total;
@@ -102,18 +105,15 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
     const newValue = e.target.value;
     const newScores = {
       ...scores,
-      [`${muscle}.${side}`]: newValue
+      [`${muscle}.${side}`]: newValue,
     };
     setScores(newScores);
   };
 
-
   // Dispatch the calculated percent to the Redux store
   useEffect(() => {
-
     dispatch(setVisitPercent(key, visit, percentFilled));
   }, [percentFilled, dispatch, visit]);
-
 
   // const total = summary.total;
   // const prev = useRef({ total: null });
@@ -196,9 +196,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
                         onChange={handleChange("Neck Flexor", "axial")}
                         disabled={readOnly}
                       >
-                        <option value="" disabled>
-                          Select
-                        </option>
+                        <option value="">Select</option>
                         {SCORE_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}
@@ -206,7 +204,13 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
                         ))}
                       </select>
                       {!readOnly && isFieldEmpty("Neck Flexor", "axial") && (
-                        <div style={{ color: "red", fontSize: "11px", marginTop: "2px" }}>
+                        <div
+                          style={{
+                            color: "red",
+                            fontSize: "11px",
+                            marginTop: "2px",
+                          }}
+                        >
                           Required
                         </div>
                       )}
@@ -232,7 +236,6 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
                                   style={{ width: "72px" }}
                                   value={scores[`${row.label}.${side}`] ?? ""}
                                   onChange={handleChange(row.label, side)}
-                                  
                                   disabled={readOnly}
                                 >
                                   <option value="">Select</option>
@@ -243,7 +246,13 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT 
                                   ))}
                                 </select>
                                 {!readOnly && isFieldEmpty(row.label, side) && (
-                                  <div style={{ color: "red", fontSize: "11px", marginTop: "2px" }}>
+                                  <div
+                                    style={{
+                                      color: "red",
+                                      fontSize: "11px",
+                                      marginTop: "2px",
+                                    }}
+                                  >
                                     Required
                                   </div>
                                 )}

@@ -8,4 +8,4 @@
 // export const baseURL = "http://192.168.1.24:3000/api/"
 
 //192.168.1.63
-    export const baseURL = "http://api.gurukooltraining.com/api/"
+    export const baseURL = "https://api.gurukooltraining.com/api/"

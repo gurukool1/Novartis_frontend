@@ -9,7 +9,11 @@ import {
 import { setAlert } from "../../../Redux/Actions/AlertActions";
 
 const makeKey = (section, visit) => `${section}_${visit}`;
-export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT }) {
+export default function Form3({
+  visit = "initial",
+  readOnly = false,
+  FORM_COUNT,
+}) {
   const dispatch = useDispatch();
   const DAMAGE_LOCATIONS = [
     "Scalp",
@@ -45,8 +49,6 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
   }, [saved]);
   const isInitial = visit === "initial";
 
-  
-
   const calculateFilledFields = (obj) => {
     let filled = 0;
     for (const k in obj) {
@@ -67,10 +69,9 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
     return { poikilo, calc, total: poikilo + calc };
   };
 
-  
   const totalFields = DAMAGE_LOCATIONS.length * 2;
   const filledFields = calculateFilledFields(scores);
-  const percentFilled = (filledFields / totalFields) * 100 / FORM_COUNT;
+  const percentFilled = ((filledFields / totalFields) * 100) / FORM_COUNT;
   const totals = calculateTotals(scores);
   const total = totals.total;
   const isFieldEmpty = (loc, field) => {
@@ -86,8 +87,6 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
     };
     setScores(newScores);
   };
-
-  
 
   useEffect(() => {
     dispatch(setVisitPercent(key, visit, percentFilled));
@@ -107,7 +106,6 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
       dispatch(pushSectionData(key, scores));
     }
   }, [scores, key, dispatch]);
-
 
   return (
     <div
@@ -156,7 +154,6 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                             style={{ width: "72px" }}
                             value={scores[`${loc}.poikilo`] ?? ""}
                             onChange={handleChange(loc, "poikilo")}
-                            
                             disabled={readOnly}
                           >
                             <option value="">Select</option>
@@ -167,7 +164,13 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                             ))}
                           </select>
                           {!readOnly && isFieldEmpty(loc, "poikilo") && (
-                            <div style={{ color: "red", fontSize: "11px", marginTop: "2px" }}>
+                            <div
+                              style={{
+                                color: "red",
+                                fontSize: "11px",
+                                marginTop: "2px",
+                              }}
+                            >
                               Required
                             </div>
                           )}
@@ -181,12 +184,9 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                             style={{ width: "72px" }}
                             value={scores[`${loc}.calcinosis`] ?? ""}
                             onChange={handleChange(loc, "calcinosis")}
-                            
                             disabled={readOnly}
                           >
-                            <option value="" disabled>
-                              Select
-                            </option>
+                            <option value="">Select</option>
                             {CALCINOSIS_OPTS.map((v) => (
                               <option key={v} value={v}>
                                 {v}
@@ -194,7 +194,13 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                             ))}
                           </select>
                           {!readOnly && isFieldEmpty(loc, "calcinosis") && (
-                            <div style={{ color: "red", fontSize: "11px", marginTop: "2px" }}>
+                            <div
+                              style={{
+                                color: "red",
+                                fontSize: "11px",
+                                marginTop: "2px",
+                              }}
+                            >
                               Required
                             </div>
                           )}
