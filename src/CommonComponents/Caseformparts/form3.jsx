@@ -12,7 +12,7 @@ const Form3 = ({ data, visit, sectionName }) => {
     "Scalp", "Malar Area", "Periorbital", "Rest of the Face",
     "V - area Neck (Frontal)", "Posterior Neck", "Upper Back & Shoulders",
     "Rest of Back & Buttocks", "Abdomen", "Lateral Upper Thigh",
-    "Rest of Leg and feet", "Arm", "Mechanic's Hand",
+    "Rest of Leg & Feet", "Arm", "Mechanic's Hand",
     "Dorsums of hands (Not Over Joints)", "Gottron's - Not on Hands"
   ];
 
