@@ -48,6 +48,9 @@ const styles = StyleSheet.create({
   formContainer: {
     marginBottom: 15,
   },
+  pageBreak: {
+    break: 'page',
+  },
 });
 
 const FormPdfRenderer = ({ formData,selectedForm }) => {
@@ -57,9 +60,13 @@ const FormPdfRenderer = ({ formData,selectedForm }) => {
  
   if (!formData) return null;
 
-  const renderFormSection = (Component, data, sectionName, visit) => {
+  const renderFormSection = (Component, data, sectionName, visit, forcePageBreak = true) => {
+    const shouldAddPageBreak = !isFirstForm && forcePageBreak;
+    if (forcePageBreak) {
+      isFirstForm = false;
+    }
     return (
-      <View style={styles.formContainer}>
+      <View style={styles.formContainer} break={shouldAddPageBreak}>
         <Component
           data={data}
           visit={visit}
@@ -83,7 +90,22 @@ const FormPdfRenderer = ({ formData,selectedForm }) => {
         return selectedForm.includes(formIdentifier);
     };
     const shouldShowForm8 = selectedForm.includes("CDASI") || selectedForm.includes("AllForms");
+    const getFirstFormKey = () => {
+    if (selectedForm.includes("AllForms")) return "MMT8_initial";
+    
+    const formOrder = ["MMT8", "CDASI", "MDAAT", "Physician"];
+    for (const form of formOrder) {
+      if (selectedForm.includes(form)) {
+        return `${form}_initial`;
+      }
+    }
+    return null;
+  };
+
+  const firstFormKey = getFirstFormKey();
+  let isFirstForm = true;
   return (
+
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Myositis Case Scoring Sheet</Text>
@@ -125,14 +147,14 @@ const FormPdfRenderer = ({ formData,selectedForm }) => {
         {shouldShowForm(2) && (
           <>
             {renderFormSection(Form2, formData.initial?.CDASI_Activity, "CDASI Activity", "initial")}
-            {renderFormSection(Form3, formData.initial?.CDASI_Damage, "CDASI Damage", "initial")}
-            {renderFormSection(Form4, formData.initial?.Gottron_Hands, "Gottron's Hands", "initial")}
-            {renderFormSection(Form5, formData.initial?.Periungual, "Periungual Findings", "initial")}
-            {renderFormSection(Form6, formData.initial?.Alopecia, "Alopecia Assessment", "initial")}
+            {renderFormSection(Form3, formData.initial?.CDASI_Damage, "CDASI Damage", "initial", false)}
+            {renderFormSection(Form4, formData.initial?.Gottron_Hands, "Gottron's Hands", "initial", false)}
+            {renderFormSection(Form5, formData.initial?.Periungual, "Periungual Findings", "initial", false)}
+            {renderFormSection(Form6, formData.initial?.Alopecia, "Alopecia Assessment", "initial", false)}
           </>
         )}
         {shouldShowForm8 &&
-        renderFormSection(Form8, formData.initial?.form_Score, "Form Scores", "initial")}
+        renderFormSection(Form8, formData.initial?.form_Score, "Form Scores", "initial", false)}
         {shouldShowForm(3) && (
           <>
             {renderFormSection(Form7, formData.initial?.MDAAT, "MDAAT", "initial")}
@@ -153,15 +175,14 @@ const FormPdfRenderer = ({ formData,selectedForm }) => {
         {shouldShowForm(2) && (
           <>
             {renderFormSection(Form2, formData.followUp?.CDASI_Activity, "CDASI Activity", "followUp")}
-            {renderFormSection(Form3, formData.followUp?.CDASI_Damage, "CDASI Damage", "followUp")}
-            {renderFormSection(Form4, formData.followUp?.Gottron_Hands, "Gottron's Hands", "followUp")}
-            {renderFormSection(Form5, formData.followUp?.Periungual, "Periungual Findings", "followUp")}
-            {renderFormSection(Form6, formData.followUp?.Alopecia, "Alopecia Assessment", "followUp")}
+            {renderFormSection(Form3, formData.followUp?.CDASI_Damage, "CDASI Damage", "followUp", false)}
+            {renderFormSection(Form4, formData.followUp?.Gottron_Hands, "Gottron's Hands", "followUp", false)}
+            {renderFormSection(Form5, formData.followUp?.Periungual, "Periungual Findings", "followUp", false)}
+            {renderFormSection(Form6, formData.followUp?.Alopecia, "Alopecia Assessment", "followUp", false)}
           </>
         )}
         {shouldShowForm8 &&
-        renderFormSection(Form8, formData.followUp?.form_Score, "Form Scores", "followUp")}
-        
+        renderFormSection(Form8, formData.followUp?.form_Score, "Form Scores", "followUp", false)}
         {shouldShowForm(3) && (
           <>
             {renderFormSection(Form7, formData.followUp?.MDAAT, "MDAAT", "followUp")}
