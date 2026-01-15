@@ -7,12 +7,18 @@ const Form3 = ({ data, visit, sectionName }) => {
 
   // let snCounter = 1;
   // const nextSn = () => snCounter++;
-
+  const getDisplayName = (key) => {
+    const displayNames = {
+      "Rest of Leg and feet": "Rest of Leg & Feet",
+      "V‑area Neck (Frontal)": "V - area Neck (Frontal)"
+    };
+    return displayNames[key] || key;
+  };
   const DAMAGE_LOCATIONS = [
     "Scalp", "Malar Area", "Periorbital", "Rest of the Face",
-    "V - area Neck (Frontal)", "Posterior Neck", "Upper Back & Shoulders",
+    "V‑area Neck (Frontal)", "Posterior Neck", "Upper Back & Shoulders",
     "Rest of Back & Buttocks", "Abdomen", "Lateral Upper Thigh",
-    "Rest of Leg & Feet", "Arm", "Mechanic's Hand",
+    "Rest of Leg and feet", "Arm", "Mechanic's Hand",
     "Dorsums of hands (Not Over Joints)", "Gottron's - Not on Hands"
   ];
 
@@ -62,7 +68,7 @@ const Form3 = ({ data, visit, sectionName }) => {
         {DAMAGE_LOCATIONS.map((loc) => (
           <View key={loc} style={styles.tableRow} wrap={false}>
             {/* <Text style={[styles.tableCell, { flex: 0.5, textAlign: 'center' }]}>S/N</Text> */}
-            <Text style={styles.tableCell}>{loc}</Text>
+            <Text style={styles.tableCell}>{getDisplayName(loc)}</Text>
             <Text style={styles.tableCell}>{data[`${loc}.poikilo`] || "-"}</Text>
             <Text style={styles.tableCell}>{data[`${loc}.calcinosis`] || "-"}</Text>
           </View>

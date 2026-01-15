@@ -99,7 +99,7 @@ const Form1 = ({ data, visit, sectionName }) => {
           </Text> */}
         <Text style={{ fontSize: 11, fontWeight: 'bold' }}  >
           {visit === 'initial'
-            ? 'Manual Muscle Testing ‑ 8 (MMT ‑ 8)'
+            ? 'Manual Muscle Testing - 8 (MMT - 8)'
             : "Answers with possible correct responses based on patient's examination in the case."}
         </Text>
 

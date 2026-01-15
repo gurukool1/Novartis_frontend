@@ -8,10 +8,16 @@ const Form2 = ({ data, visit, sectionName }) => {
 
   // let snCounter = 1;
   // const nextSn = () => snCounter++;
+  const getDisplayName = (key) => {
+    const displayNames = {
+      "V‑area Neck (Frontal)": "V - area Neck (Frontal)"
+    };
+    return displayNames[key] || key;
+  };
 
   const LOCATIONS = [
     "Scalp", "Malar Area", "Periorbital", "Rest of the Face",
-    "V - area Neck (Frontal)", "Posterior Neck", "Upper Back & Shoulders",
+    "V‑area Neck (Frontal)", "Posterior Neck", "Upper Back & Shoulders",
     "Rest of Back & Buttocks", "Abdomen", "Lateral Upper Thigh",
     "Rest of Leg & Feet", "Arm", "Mechanic's Hand",
     "Dorsum of Hands (Not Over Joints)", "Gottron's - Not on Hands"
@@ -91,7 +97,7 @@ const Form2 = ({ data, visit, sectionName }) => {
         {LOCATIONS.map((loc) => (
           <View key={loc} style={styles.tableRow}>
             {/* <Text style={[styles.tableCell, { flex: 0.5, textAlign: 'center' }]}>{nextSn()}</Text> */}
-            <Text style={styles.tableCell}>{loc}</Text>
+            <Text style={styles.tableCell}>{getDisplayName(loc)}</Text>
             <Text style={styles.tableCell}>{data[`${loc}.erythema`] || "-"}</Text>
             <Text style={styles.tableCell}>{data[`${loc}.scale`] || "-"}</Text>
             <Text style={styles.tableCell}>{data[`${loc}.erosion`] || "-"}</Text>

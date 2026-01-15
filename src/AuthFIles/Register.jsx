@@ -192,10 +192,13 @@ export const Register = () => {
 
       dispatch(registerUser(userData, setLoader));
       localStorage.removeItem("registerForm");
-      setCaptcha(generateCaptcha());
+      
     }
   };
 
+  useEffect(() => {
+    setCaptcha(generateCaptcha());
+  }, []);
   useEffect(() => {
     return () => {
       dispatch(unmountRegisterData());

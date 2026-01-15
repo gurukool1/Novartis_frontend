@@ -9,6 +9,12 @@ import {
 import { setAlert } from "../../../Redux/Actions/AlertActions";
 
 const makeKey = (section, visit) => `${section}_${visit}`;
+const getDisplayName = (key) => {
+  const displayNames = {
+    "Rest of Leg and feet": "Rest of Leg & Feet",
+  };
+  return displayNames[key] || key;
+};
 export default function Form3({
   visit = "initial",
   readOnly = false,
@@ -20,13 +26,13 @@ export default function Form3({
     "Malar Area",
     "Periorbital",
     "Rest of the Face",
-    "V ‑ area Neck (Frontal)",
+    "V‑area Neck (Frontal)",
     "Posterior Neck",
     "Upper Back & Shoulders",
     "Rest of Back & Buttocks",
     "Abdomen",
     "Lateral Upper Thigh",
-    "Rest of Leg & Feet",
+    "Rest of Leg and feet",
     "Arm",
     "Mechanic's Hand",
     "Dorsums of hands (Not Over Joints)",
@@ -146,7 +152,7 @@ export default function Form3({
                 <tbody>
                   {DAMAGE_LOCATIONS.map((loc, i) => (
                     <tr key={i}>
-                      <td>{loc}</td>
+                      <td>{getDisplayName(loc)}</td>
                       <td>
                         <div>
                           <select

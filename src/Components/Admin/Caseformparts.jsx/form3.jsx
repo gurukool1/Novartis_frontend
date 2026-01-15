@@ -8,6 +8,12 @@ import {
 } from "../../../Redux/Actions/FormActions";
 
 const makeKey = (section, visit) => `${section}_${visit}`;
+const getDisplayName = (key) => {
+  const displayNames = {
+    "Rest of Leg and feet": "Rest of Leg & Feet",
+  };
+  return displayNames[key] || key;
+};
 export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT }) {
   const dispatch = useDispatch();
   const DAMAGE_LOCATIONS = [
@@ -15,19 +21,20 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
     "Malar Area",
     "Periorbital",
     "Rest of the Face",
-    "V ‑ area Neck (Frontal)",
+    "V‑area Neck (Frontal)",
     "Posterior Neck",
     "Upper Back & Shoulders",
     "Rest of Back & Buttocks",
     "Abdomen",
     "Lateral Upper Thigh",
-    "Rest of Leg & Feet",
+    "Rest of Leg and feet",
     "Arm",
     "Mechanic's Hand",
     "Dorsums of hands (Not Over Joints)",
     "Gottron's - Not on Hands",
   ];
 
+  
   const POIKILO_OPTS = [0, 1, 2];
   const CALCINOSIS_OPTS = [0, 1];
   const key = makeKey("CDASI_Damage", visit);
@@ -122,7 +129,7 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                 <tbody>
                   {DAMAGE_LOCATIONS.map((loc, i) => (
                     <tr key={i}>
-                      <td>{loc}</td>
+                      <td>{getDisplayName(loc)}</td>
                       <td>
                         <select
                           className="input sm light px-2"
