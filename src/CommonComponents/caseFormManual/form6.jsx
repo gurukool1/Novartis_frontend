@@ -1,15 +1,15 @@
 import React from "react";
 
-export default function Form5({
+export default function Form6({
   visit = "initial",
   readOnly = false,
   scores = {},
   onChange
 }) {
-  const PERI_OPTS = [0, 1, 2];
+  const HAIRLOSS_OPTS = [0, 1];
 
   const handleChange = (e) => {
-    const updated = { peri: e.target.value };
+    const updated = { alopecia: e.target.value };
     onChange(updated);
   };
 
@@ -22,20 +22,21 @@ export default function Form5({
               <thead>
                 <tr>
                   <th
-                    colSpan={2}
+                    colSpan="3"
                     style={{
                       borderBottom: "0.0625rem solid #ffffff30",
                       padding: "15px",
                       textAlign: "center",
                       fontSize: "18px",
+                      color: "#fff",
                     }}
                   >
-                    Periungual
+                    Alopecia
                   </th>
                 </tr>
                 <tr>
-                  <th colSpan={2} style={{ padding: "12px", textAlign: "left" }}>
-                    Periungual changes (examine)
+                  <th colSpan="2" style={{ padding: "12px", textAlign: "left" }}>
+                    Recent Hair loss (within last 30 days as reported by the patient)
                   </th>
                 </tr>
               </thead>
@@ -47,22 +48,20 @@ export default function Form5({
                     className="alltext"
                     style={{ padding: "12px", fontWeight: "bold" }}
                   >
-                    0 - absent <br />
-                    1 - pink/red erythema / microscopic telangiectasias <br />
-                    2 - visible telangiectasias
+                    0 - absent <br /> 1 - present
                   </td>
 
-                  {/* selectable score */}
+                  {/* selectable score 0‑1 */}
                   <td style={{ padding: "12px" }}>
                     <select
                       className="input sm light px-2"
-                      style={{ width: 72 }}
-                      value={scores.peri || ""}
+                      style={{ width: "72px" }}
+                      value={scores.alopecia || ""}
                       onChange={handleChange}
                       disabled={readOnly}
                     >
                       <option value="">Select</option>
-                      {PERI_OPTS.map((v) => (
+                      {HAIRLOSS_OPTS.map((v) => (
                         <option key={v} value={v}>
                           {v}
                         </option>

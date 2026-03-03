@@ -8,7 +8,8 @@ const initialState = {
   initialPercent: 0,
   followUpPercent: 0,
   combinedPercent: 0,
-  formId: null
+  formId: null,
+  caseId: null,
 };
 
 export const FormReducer = (state = initialState, action) => {
@@ -31,6 +32,12 @@ export const FormReducer = (state = initialState, action) => {
         draft.formId = payload;
         break;
       }
+
+    // case 'SET_FORM_IDD':
+    //   return { ...state, formId: action.payload };
+    case 'SET_CASE_ID':
+      return { ...state, caseId: action.payload };
+
       case "SET_FORM_PERCENT": {
         const { visit, percent, formKey } = payload;
 

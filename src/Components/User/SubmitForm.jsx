@@ -48,8 +48,8 @@ export const SubmitForm = () => {
   const isReadOnly = queryParams.get("view") !== null;
   const caseId = Number(caseIdParam) || null;
   const userCaseId = Number(userCaseIdParam) || null;
-  // const formId = Number(formIdParam) || null;
-  const formId = useSelector((state) => state.forms.formId);
+   const formId = Number(formIdParam) || null;
+   console.log("SubmitForm params - caseId:", caseId, "formId:", formId, "userCaseId:", userCaseId, "isReadOnly:", isReadOnly);
 
   const [showSubmitAlert, setShowSubmitAlert] = useState(false);
   const initialPercent = useSelector((state) => state.forms.initialPercent);

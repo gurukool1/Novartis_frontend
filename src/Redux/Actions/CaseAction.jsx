@@ -150,6 +150,117 @@ export const getSubmittedCases = (setLoader) => async (dispatch, getState) => {
 
 
 
+// export const triggerEvaluation = (caseId, formId) =>  async (dispatch, getState) => {
+//     try {
+//        const token = getState().auth.token;
+//       if (!caseId || !formId) {
+//         alert("Case ID or Form ID is missing");
+//         return;
+//       }
+//       console.log("Case ID:", caseId, "Form ID:", formId);
+
+//       const res = await commonAxios(
+//         "evaluation/trigger",
+//         { caseId, formId },
+//         dispatch,
+//         token
+//       );
+
+//       console.log("API Response:", res);
+//       alert("Check console for API response");
+
+//     } catch (error) {
+//       console.error("API Error:", error);
+//       alert("API Error occurred");
+//     }
+//   };
+
+
+
+
+
+// Replace your existing triggerEvaluation action with this version.
+// It returns the full API response so the caller can navigate with the data.
+
+// export const triggerEvaluation = (caseId, formId) => async (dispatch, getState) => {
+//   try {
+//     const token = getState().auth.token;
+
+//     if (!caseId || !formId) {
+//       return { success: false, error: "Case ID or Form ID is missing." };
+//     }
+
+//     const res = await commonAxios(
+//       "evaluation/trigger",
+//       { caseId, formId },
+//       dispatch,
+//       token
+//     );
+// console.log(res, "API Response in action");
+//     // res is the full API response object: { success, form, result }
+//     if (res && res.status === true) {
+//       console.log("Evaluation successful, response:", res);
+//       return res.data; // { success: true, form: {...}, result: {...} }
+//     }
+
+//     return { success: false, error: res?.msg || "Evaluation failed." };
+//   } catch (error) {
+//     console.error("Evaluation API Error:", error);
+//     return { success: false, error: error?.msg || "An unexpected error occurred." };
+//   }
+// };
+
+
+
+
+
+
+
+export const triggerEvaluation = (caseId, formId) => async (dispatch, getState) => {
+  try {
+    const token = getState().auth.token;
+
+    if (!caseId || !formId) {
+      return { success: false, error: "Case ID or Form ID is missing." };
+    }
+
+    const res = await commonAxios(
+      "evaluation/trigger",
+      { caseId, formId },
+      dispatch,
+      token
+    );
+
+    console.log("Full API Response:", res);
+
+    // ✅ Your API already returns the final object
+    if (res.status === true) {
+      return res;   // ✅ RETURN FULL RESPONSE
+    }
+
+    return { success: false, error: res?.msg || "Evaluation failed." };
+  } catch (error) {
+    console.error("Evaluation API Error:", error);
+    return { success: false, error: error?.message || "An unexpected error occurred." };
+  }
+};
+
+
+
+
+
+
+
+// const checkApiResponse = async (dispatch, getState) => {
+//   try {
+//     const token = getState().auth.token;
+//     const res = await commonAxios('evaluation/trigger', {}, dispatch, token);
+//     console.log("API Response:", res); 
+//   } catch (err) {
+//     console.error("API Error:", err);
+//   }
+// };
+
 
 // Get details of a specific submitted case
 export const getSubmittedCaseDetails = (id) => async (dispatch, getState) => {
@@ -197,10 +308,6 @@ export const downloadCaseFile = (caseId, fileName) => async (dispatch, getState)
     return false;
   }
 };
-
-
-
-
 
 
 

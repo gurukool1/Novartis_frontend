@@ -5,7 +5,7 @@
 // export const baseURL = "https://testing.nivit-tech.com/api/"
 // export const baseURL = "http://192.168.1.190:3000/api/"
 
-// export const baseURL = "http://192.168.1.24:3000/api/"
+ export const baseURL = "http://192.168.1.136:3000/api/"
 
 //192.168.1.63
-    export const baseURL = "https://api.gurukooltraining.com/api/"
+  //  export const baseURL = "https://api.gurukooltraining.com/api/"

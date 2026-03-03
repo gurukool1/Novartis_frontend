@@ -31,50 +31,6 @@ export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT 
 
     const isInitial = visit === "initial";
 
-    // useEffect(() => {
-    //     if (saved !== scores) setScores(saved);
-    // }, [saved]);
-
-
-    // const Slider = ({ name }) => {
-    //     const value =
-    //     scores[name] === undefined || scores[name] === ""
-    //         ? 0
-    //         : Number(scores[name]);
-
-    //     const handle = (e) => setScores((p) => ({ ...p, [name]: e.target.value }));
-
-    //     return (
-    //     <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-    //         <input
-    //         type="range"
-    //         min={0}
-    //         max={10}
-    //         step={1}
-    //         value={value}
-    //         onChange={handle}
-    //         style={{ flex: 1 }}
-    //         disabled={readOnly}
-    //         />
-
-    //         <input
-    //         readOnly
-    //         className="input sm light px-2"
-    //         value={value}
-    //         style={{ width: 34, textAlign: "center" }}
-    //         />
-    //     </div>
-    //     );
-    // };
-
-    // // const total = useMemo(() => {
-    //   return Object.values(scores).reduce((sum, v) => {
-    //     if (v === "" || v === "NA") return sum;
-    //     return sum + Number(v);
-    //   }, 0);
-    // }, [scores]);
-    // const FORM_COUNT = 14;
-
     const Value = scores?.["Physicianglobal"];
     const currentValue = Value === null || Value === undefined || Value === "" 
         ? null 

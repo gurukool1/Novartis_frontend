@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { HiOutlineDocumentReport } from 'react-icons/hi';
 import { MdOutlineQuestionAnswer } from "react-icons/md";
 import { MdOutlineAppRegistration } from "react-icons/md";
-
+import { MdOutlineFactCheck } from "react-icons/md";
 const SidePanel = ({ onLinkClick }) => {
   const location = useLocation();
   const [showSettingsOptions, setShowSettingsOptions] = useState(false);
@@ -35,6 +35,16 @@ const SidePanel = ({ onLinkClick }) => {
       <ul>
         <li><NavLink to="/admin/dashboard" onClick={onLinkClick}><span><RxDashboard /> <div>Dashboard</div></span></NavLink></li>
         <li><NavLink to="/admin/upload" onClick={onLinkClick}><span><RiUploadCloud2Line /> <div>Upload Case</div></span></NavLink></li>
+
+
+     <li>
+  <NavLink to="/admin/answer-sheet" onClick={onLinkClick}>
+    <span>
+      <MdOutlineFactCheck /> 
+      <div>Answer Sheet</div>
+    </span>
+  </NavLink>
+</li>
 
         <li>
           <a href="#" onClick={handleSettingsClick} style={{ cursor: "pointer" }}>

@@ -8,7 +8,7 @@ import {
 } from "../../../Redux/Actions/FormActions";
 
 const makeKey = (section, visit) => `${section}_${visit}`;
-export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT }) {
+export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT = 1 }) {
     const dispatch = useDispatch();
 
     const key = makeKey("Physician", visit);
@@ -26,56 +26,25 @@ export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT 
     const isInitial = visit === "initial";
 
 
-    // const Slider = ({ name }) => {
-    //     const value =
-    //     scores[name] === undefined || scores[name] === ""
-    //         ? 0
-    //         : Number(scores[name]);
+    // const percentFilled = useMemo(() =>
+    //      (scores > 0 ? (100 / FORM_COUNT) : 0),
+    // [scores, FORM_COUNT]
+    // )
 
-    //     const handle = (e) => setScores((p) => ({ ...p, [name]: e.target.value }));
+    const percentFilled = useMemo(() => {
+  if (!FORM_COUNT || FORM_COUNT <= 0) return 0;
+  return scores > 0 ? (100 / FORM_COUNT) : 0;
+}, [scores, FORM_COUNT]);
 
-    //     return (
-    //     <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-    //         <input
-    //         type="range"
-    //         min={0}
-    //         max={10}
-    //         step={1}
-    //         value={value}
-    //         onChange={handle}
-    //         style={{ flex: 1 }}
-    //         disabled={readOnly}
-    //         />
-
-    //         <input
-    //         readOnly
-    //         className="input sm light px-2"
-    //         value={value}
-    //         style={{ width: 34, textAlign: "center" }}
-    //         />
-    //     </div>
-    //     );
-    // };
-
-    // // const total = useMemo(() => {
-    //   return Object.values(scores).reduce((sum, v) => {
-    //     if (v === "" || v === "NA") return sum;
-    //     return sum + Number(v);
-    //   }, 0);
-    // }, [scores]);
-    // const FORM_COUNT = 14;
-    const percentFilled = useMemo(() => (scores > 0 ? (100 / FORM_COUNT) : 0),
-    [scores, FORM_COUNT]
-    )
 
     useEffect(() => {
         dispatch(setVisitPercent(key, visit, percentFilled));
-    }, [percentFilled, dispatch, visit]);
+    }, [percentFilled, dispatch, visit, key]);
 
     useEffect(() => {
         // dispatch(pushSectionTotal(key, total));
         dispatch(pushSectionData(key, { Physicianglobal: scores }));
-    }, [visit, scores, dispatch]);
+    }, [visit, scores, dispatch, key]);
 
     return (
     <div className="form-section-wrap table-container text-center mt-4">

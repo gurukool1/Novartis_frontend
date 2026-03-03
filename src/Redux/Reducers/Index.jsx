@@ -5,7 +5,7 @@ import { CaseReducer } from "./CaseReducer";
 import { userReducer } from "./userReducer";
 import { FormReducer } from "./FormReducer";
 import { faqReducer } from "./FaqReducer"
-
+import {AnswerSheetReducer} from "./AnswerSheetReducer";
 
 const appReducer = combineReducers({
   alert: AlertReducer,
@@ -14,6 +14,8 @@ const appReducer = combineReducers({
   users: userReducer,
   forms: FormReducer,
   faqs: faqReducer,
+  answerSheets: AnswerSheetReducer,
+
 });
 
 const rootReducers = (state, action) => {

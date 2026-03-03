@@ -22,7 +22,7 @@ import { AssignForm } from "./CommonComponents/AssignForm"
 import { UserDashboard } from "./Components/User/UserDashboard"
 import { MyCases } from "./Components/User/MyCases"
 import { UserProfile } from "./Components/User/UserProfile"
-
+import AnswerSheetComparison from "./Components/Admin/AnswerSheet/AnswerSheetComparison";
 import { Reports } from "./Components/Admin/Reports/Reports"
 import MainWrapper from "./CommonComponents/MainWrapper"
 import { ResetPassword } from './AuthFIles/ResetPassword';
@@ -30,7 +30,7 @@ import { Faq } from './CommonComponents/Faq';
 import { SubmitForm } from "./Components/User/SubmitForm.jsx"
 import { SubmittedForm } from "./Components/Admin/SubmittedForm.jsx"
 import { Instruction } from "./Components/User/Instruction.jsx"
-
+import { AnswerSheet } from './Components/Admin/AnswerSheet/AnswerSheet';
 function App() {
   const alert = useSelector(state => state.alert)
   const dispatch = useDispatch()
@@ -71,9 +71,14 @@ function App() {
             <Route exact path="/admin/User-management" element={<PrivateRoute ><User /></PrivateRoute>} />
 
 
+
+
+
+<Route path="/admin/answer-sheet/compare" element={<PrivateRoute><AnswerSheetComparison /></PrivateRoute>} />
+
             <Route path="/admin/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-
-
+            <Route  path="/admin/answer-sheet" element={<PrivateRoute><AnswerSheet /></PrivateRoute>} />
+    
             <Route path="/admin/upload" element={<PrivateRoute><UploadCase /></PrivateRoute>} />
             <Route path="/admin/documents" element={<PrivateRoute><ViewAllCases /></PrivateRoute>} />
             <Route path="/admin/documents/assign" element={<PrivateRoute><Assign /></PrivateRoute>} />

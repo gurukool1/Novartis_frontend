@@ -1,133 +1,184 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import {
-  // pushSectionTotal,
-  pushSectionData,
-  selectSectionData,
-  setVisitPercent,
-} from "../../../Redux/Actions/FormActions";
+// import { useMemo } from "react";
 
-const makeKey = (section, visit) => `${section}_${visit}`;
-export default function Form7({ visit = "initial", readOnly = false, FORM_COUNT }) {
-  const dispatch = useDispatch();
+// export default function Form7({
+//   visit = "initial",
+//   readOnly = false,
+//   FORM_COUNT,
+//   formData = {},
+//   setFormData,
+// }) {
+//   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
 
+//   const handleChange = (name, value) => {
+//     setFormData((prev) => ({
+//       ...prev,
+//       [name]: value === "NA" ? "NA" : Number(value),
+//     }));
+//   };
+
+//   const percentFilled = useMemo(() => {
+//     const totalFields = 50;
+
+//     const filled = Object.values(formData).filter(
+//       (v) => v !== "" && v !== undefined
+//     ).length;
+
+//     return (filled / totalFields) * (100 / FORM_COUNT);
+//   }, [formData, FORM_COUNT]);
+
+//   const Sel = ({ name }) => (
+//     <select
+//       className="input sm light px-2"
+//       style={{ width: 72 }}
+//       value={formData[name] ?? ""}
+//       disabled={readOnly}
+//       onChange={(e) => handleChange(name, e.target.value)}
+//     >
+//       <option value="">Select</option>
+//       {CF_OPTS.map((o) => (
+//         <option key={o} value={o}>
+//           {o}
+//         </option>
+//       ))}
+//     </select>
+//   );
+
+//   const Slider = ({ name }) => {
+//     const value = Number(formData[name] ?? 0);
+
+//     return (
+//       <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+//         <input
+//           type="range"
+//           min={0}
+//           max={10}
+//           step={1}
+//           value={value}
+//          // disabled={readOnly}
+//           onChange={(e) => handleChange(name, e.target.value)}
+//           style={{ flex: 1 }}
+//         />
+//         <input
+//           readOnly
+//           className="input sm light px-2"
+//           value={value}
+//           style={{ width: 34, textAlign: "center" }}
+//         />
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <div>
+//       {/* Your existing table stays SAME */}
+//       {/* Only Sel & Slider now use handleChange */}
+//     </div>
+//   );
+// }
+
+
+
+
+import React from "react";
+
+export default function Form7({
+  visit = "initial",
+  readOnly = false,
+  scores = {},
+  onChange,
+  FORM_COUNT = 1,
+}) {
   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
-  const key = makeKey("MDAAT", visit);
+  const totalFields = 51; // total fields for percent calculation
 
-  const saved = useSelector(selectSectionData(key), shallowEqual);
+  // Stable handler for changes
+  const handleChange = (name) => (e) => {
+    const value = e.target.value;
+    onChange({
+      ...scores,
+      [name]: value === "NA" ? "NA" : value === "" ? "" : Number(value),
+    });
+  };
 
-  const [scores, setScores] = useState(saved);
-  // useEffect(() => {
-  //   if (saved !== scores) setScores(saved);
-  // }, [saved]);
+  const isFieldEmpty = (name) =>
+    scores[name] === undefined || scores[name] === null || scores[name] === "";
 
-  const prevSavedRef = useRef(null);
-
-
-useEffect(() => {
-  const incoming = JSON.stringify(saved);
-  if (incoming !== prevSavedRef.current) {
-    prevSavedRef.current = incoming;
-    setScores(saved);
-  }
-}, [saved]);
-
-
+  const percentFilled =
+    (Object.values(scores).filter((v) => v !== "" && v !== undefined && v !== null).length /
+      totalFields) *
+    (100 / FORM_COUNT);
 
   const isInitial = visit === "initial";
 
-  const Sel = ({ opts, name }) => (
-    <select
-      className="input sm light px-2"
-      style={{ width: "72px" }}
-      value={scores[name] ?? ""}
-      onChange={(e) => setScores((p) => ({ ...p, [name]: e.target.value }))}
-      disabled={readOnly}
-    >
-      <option value="">Select</option>
-      {opts.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-
+  // Slider Component
   const Slider = ({ name }) => {
     const value =
-      scores[name] === undefined || scores[name] === ""
+      scores[name] === "" || scores[name] === null || scores[name] === undefined
         ? 0
         : Number(scores[name]);
 
-    const handle = (e) => setScores((p) => ({ ...p, [name]: e.target.value }));
-
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 3}}>
-        <input
-          type="range"
-          min={0}
-          max={10}
-          step={1}
-          value={value}
-          onChange={handle}
-          style={{ flex: 1 }}
-          disabled={readOnly}
-        />
-
-        <input
-          readOnly
-          className="input sm light px-2"
-          value={value}
-          style={{ width: 34, textAlign: "center" }}
-        />
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={1}
+            value={value}
+            disabled={readOnly}
+            onChange={handleChange(name)}
+            style={{ flex: 1 }}
+          />
+          <input
+            readOnly
+            className="input sm light px-2"
+            value={value}
+            style={{ width: 34, textAlign: "center" }}
+          />
+        </div>
+        {/* {!readOnly && isFieldEmpty(name) && (
+          <div style={{ color: "red", fontSize: 11, marginTop: 1, textAlign: "center" }}>
+            Required
+          </div>
+        )} */}
       </div>
     );
   };
 
-
-  const percentFilled = useMemo(() => {
-    const totalFields = 50;
-    const filled = Object.entries(scores).filter(([key, val]) => {
-      if (val === "") return false;
-      if (key.endsWith(".vas")) {
-        return Number(val) > 0;
-      }
-      if (key.endsWith(".cf")) {
-        return true;
-      }
-      return true;
-    }).length;
-
-    const rawPercent = (filled / totalFields) * 100;
-    const scaled = rawPercent * (1 / FORM_COUNT);
-    return scaled;
-  }, [scores]);
-
-  useEffect(() => {
-    dispatch(setVisitPercent(key, visit, percentFilled));
-  }, [percentFilled, dispatch, visit]);
-
-  useEffect(() => {
-    // dispatch(pushSectionTotal(key, total));
-    dispatch(pushSectionData(key, scores));
-  }, [visit, scores, dispatch]);
+  // Select Component
+  const Sel = ({ name }) => (
+    <div>
+      <select
+        className="input sm light px-2"
+        style={{ width: 72 }}
+        value={scores[name] ?? ""}
+        disabled={readOnly}
+        onChange={handleChange(name)}
+      >
+        <option value="">Select</option>
+        {CF_OPTS.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+      </select>
+      {/* {!readOnly && isFieldEmpty(name) && (
+        <div style={{ color: "red", fontSize: 11, marginTop: 2 }}>Required</div>
+      )} */}
+    </div>
+  );
 
   return (
-    <>
     <div className="form-section-wrap panel panel-default mt-4" id="form1Mdaat">
       <div className="panel-heading">
         <strong>Form MDAAT</strong>
       </div>
       <div className="panel-body mt-3">
         <div className="table-container text-center">
-          {isInitial ? (
-            <h5>Case Presentation: Initial </h5>
-          ) : (
-            <h5>Case Presentation: Follow up</h5>
-          )}
+          {isInitial ? <h5>Case Presentation: Initial</h5> : <h5>Case Presentation: Follow up</h5>}
           <hr className="horizontal-rule my-2" />
           <h5>Myositis Disease Activity Assessment Tool (MDAAT)</h5>
-          
 
           <div className="table-outer mt-3">
             <div className="table-responsive scrollbar-clr">
@@ -136,16 +187,12 @@ useEffect(() => {
                   <tr>
                     <th className="optional fixed-id" style={{ width: "50px" }}>S/N</th>
                     <th className="essential persist">Disease Activity</th>
-                    <th className="optional">
-                      Overall Organ Disease Activity (0-10 cm) VAS
-                    </th>
-                    <th className="optional" >
-                      Clinical Features (0,1,2,3,4, NA: Not Assessed)
-                    </th>
+                    <th className="optional">Overall Organ Disease Activity (0-10 cm) VAS</th>
+                    <th className="optional">Clinical Features (0,1,2,3,4, NA: Not Assessed)</th>
                   </tr>
                 </thead>
-
-                <tbody>
+          
+               <tbody>
                   {/* Constitutional Disease Activity */}
                   <tr>
                     <td className="fixed-id"></td>
@@ -162,9 +209,8 @@ useEffect(() => {
                     <td></td>
                     <td>
                       <Sel
-                        opts={CF_OPTS}
                         name="pyrexia.cf"
-                        disabled={readOnly}
+                        
                       />
                     </td>
                   </tr>
@@ -174,7 +220,7 @@ useEffect(() => {
                     <td>Weight Loss</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="weightLoss.cf" />
+                      <Sel  name="weightLoss.cf" />
                     </td>
                   </tr>
 
@@ -183,7 +229,7 @@ useEffect(() => {
                     <td>Fatigue</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="fatigue.cf" />
+                      <Sel  name="fatigue.cf" />
                     </td>
                   </tr>
 
@@ -201,7 +247,7 @@ useEffect(() => {
                     <td>Cutaneous Ulceration</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="cutaneousUlceration.cf" />
+                      <Sel  name="cutaneousUlceration.cf" />
                     </td>
                   </tr>
 
@@ -210,7 +256,7 @@ useEffect(() => {
                     <td>Erythroderma</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="erythroderma.cf" />
+                      <Sel  name="erythroderma.cf" />
                     </td>
                   </tr>
 
@@ -219,7 +265,7 @@ useEffect(() => {
                     <td>Panniculitis</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="panniculitis.cf" />
+                      <Sel  name="panniculitis.cf" />
                     </td>
                   </tr>
 
@@ -242,7 +288,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="erythemaWithSec.cf" />
+                      <Sel  name="erythemaWithSec.cf" />
                     </td>
                   </tr>
 
@@ -253,7 +299,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="erythemaNoSec.cf" />
+                      <Sel  name="erythemaNoSec.cf" />
                     </td>
                   </tr>
 
@@ -262,7 +308,7 @@ useEffect(() => {
                     <td>Heliotrope rash</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="heliotrope.cf" />
+                      <Sel  name="heliotrope.cf" />
                     </td>
                   </tr>
 
@@ -271,7 +317,7 @@ useEffect(() => {
                     <td>Gottron's papules/sign</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="gottrons.cf" />
+                      <Sel  name="gottrons.cf" />
                     </td>
                   </tr>
 
@@ -280,7 +326,7 @@ useEffect(() => {
                     <td>Periungual capillary changes</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="periungualCap.cf" />
+                      <Sel  name="periungualCap.cf" />
                     </td>
                   </tr>
 
@@ -296,7 +342,7 @@ useEffect(() => {
                     <td className="sub-heading">A. Diffuse hair Loss</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="diffuseHair.cf" />
+                      <Sel  name="diffuseHair.cf" />
                     </td>
                   </tr>
 
@@ -307,7 +353,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="patchyHair.cf" />
+                      <Sel  name="patchyHair.cf" />
                     </td>
                   </tr>
 
@@ -316,7 +362,7 @@ useEffect(() => {
                     <td>Mechanics Hand</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="mechanicsHand.cf" />
+                      <Sel  name="mechanicsHand.cf" />
                     </td>
                   </tr>
 
@@ -347,7 +393,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="polyarthritis.cf" />
+                      <Sel name="polyarthritis.cf" />
                     </td>
                   </tr>
 
@@ -358,7 +404,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="moderateArth.cf" />
+                      <Sel  name="moderateArth.cf" />
                     </td>
                   </tr>
 
@@ -367,7 +413,7 @@ useEffect(() => {
                     <td className="sub-heading">C. Mild arthritis</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="mildArth.cf" />
+                      <Sel  name="mildArth.cf" />
                     </td>
                   </tr>
 
@@ -376,7 +422,7 @@ useEffect(() => {
                     <td>Arthralgia</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="arthralgia.cf" />
+                      <Sel  name="arthralgia.cf" />
                     </td>
                   </tr>
 
@@ -408,7 +454,7 @@ useEffect(() => {
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dysphagiaSevere.cf" />
+                      <Sel  name="dysphagiaSevere.cf" />
                     </td>
                   </tr>
 
@@ -417,7 +463,7 @@ useEffect(() => {
                     <td className="sub-heading">B. Mild dysphagia</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dysphagiaMild.cf" />
+                      <Sel  name="dysphagiaMild.cf" />
                     </td>
                   </tr>
 
@@ -437,7 +483,7 @@ useEffect(() => {
                     <td className="sub-heading">A. Severe</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="abdPainSevere.cf" />
+                      <Sel name="abdPainSevere.cf" />
                     </td>
                   </tr>
 
@@ -446,7 +492,7 @@ useEffect(() => {
                     <td className="sub-heading">B. Moderate</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="abdPainModerate.cf" />
+                      <Sel name="abdPainModerate.cf" />
                     </td>
                   </tr>
 
@@ -455,7 +501,7 @@ useEffect(() => {
                     <td className="sub-heading">C. Mild</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="abdPainMild.cf" />
+                      <Sel  name="abdPainMild.cf" />
                     </td>
                   </tr>
 
@@ -485,7 +531,7 @@ useEffect(() => {
                     <td className="sub-heading">A. Dyspnea at rest</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dyspneaRest.cf" />
+                      <Sel  name="dyspneaRest.cf" />
                     </td>
                   </tr>
 
@@ -494,7 +540,7 @@ useEffect(() => {
                     <td className="sub-heading">B. Dyspnea on exertion</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dyspneaExert.cf" />
+                      <Sel  name="dyspneaExert.cf" />
                     </td>
                   </tr>
 
@@ -652,7 +698,8 @@ useEffect(() => {
                         className="input sm light input sm light-sm"
                         placeholder="Specify___"
                         value={scores["oda.specify"] || ""}
-                        onChange={(e) => setScores((p) => ({ ...p, ["oda.specify"]: e.target.value }))}
+                        //onChange={(e) => setScores((p) => ({ ...p, ["oda.specify"]: e.target.value }))}
+                        onChange={(e) =>onChange({ ...scores,["oda.specify"]: e.target.value, })}
                         disabled={readOnly}
                       />
                     </td>
@@ -742,77 +789,223 @@ useEffect(() => {
                     <td></td>
                   </tr>
                 </tbody>
+
+
+
+            
+                  {/* Continue adding remaining fields similarly */}
+                
               </table>
             </div>
           </div>
         </div>
       </div>
     </div>
-    {/* <div className="form-section-wrap table-container text-center mt-4">
-                        <section>
-                          {isInitial ? (
-                            <h5>Case Presentation: Initial </h5>
-                          ) : (
-                            <h5>Case Presentation: Follow up</h5>
-                          )}
-                          <h5>Physician Global Disease Activity</h5>
-                          <strong>Please rate patient's global (overall) disease activity</strong>
-                          <div className="slider-section text-center mt-3 px-3">
-                            <div>Selected Value: <strong>{scores["physicianGlobal.vas"] ?? 0}</strong></div>
-                            <div style={{ position: "relative", margin: "20px 0" }}>
-                              <div style={{
-                                height: 6,
-                                background: "#e9ecef",
-                                borderRadius: 3,
-                                position: "relative"
-                              }}>
-                                <div style={{
-                                  width: `${(scores["physicianGlobal.vas"] ?? 0) * 10}%`,
-                                  height: "100%",
-                                  background: "var(--button-1)",
-                                  borderRadius: 3
-                                }} />
-                                <div style={{
-                                  position: "absolute",
-                                  left: `${(scores["physicianGlobal.vas"] ?? 0) * 10}%`,
-                                  top: -7,
-                                  transform: "translateX(-50%)"
-                                }}>
-                                  <div style={{
-                                    width: 20,
-                                    height: 20,
-                                    background: "var(--button-1)",
-                                    borderRadius: "50%",
-                                    border: "2px solid white"
-                                  }} />
-                                </div>
-                              </div>
-                              <input
-                                type="range"
-                                min={0}
-                                max={10}
-                                step={1}
-                                value={scores["physicianGlobal.vas"] ?? 0}
-                                disabled={readOnly}
-                                onChange={(e) =>
-                                  setScores((p) => ({ ...p, ["physicianGlobal.vas"]: (e.target.value) }))
-                                }
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  width: "100%",
-                                  height: 20,
-                                  opacity: 0,
-                                  cursor: "pointer"
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </section>
-    </div> */}
-
-  </>
-
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { useCallback } from "react";
+
+// export default function Form7({
+//   visit = "initial",
+//   readOnly = false,
+//   formData = {},
+//   setFormData,
+// }) {
+
+
+
+//   const handleChange = useCallback((name, value) => {
+//   setFormData((prev) => {
+//     const keys = name.split(".");
+//     const newData = { ...prev };
+
+//     let current = newData;
+//     for (let i = 0; i < keys.length - 1; i++) {
+//       current[keys[i]] = current[keys[i]] || {};
+//       current = current[keys[i]];
+//     }
+
+//     current[keys[keys.length - 1]] =
+//       value === "NA" ? "NA" : value === "" ? "" : Number(value);
+
+//     return newData;
+//   });
+// }, [setFormData]);
+
+
+//   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
+
+
+//   const Sel = ({ name }) => (
+//     <select
+//       className="input sm light px-2"
+//       style={{ width: 72 }}
+//       value={formData[name] ?? ""}
+//       disabled={readOnly}
+//       onChange={(e) => handleChange(name, e.target.value)}
+//     >
+//       <option value="">Select</option>
+//       {CF_OPTS.map((o) => (
+//         <option key={o} value={o}>
+//           {o}
+//         </option>
+//       ))}
+//     </select>
+//   );
+
+ 
+//   const Slider = ({ name }) => {
+//     const value = formData[name] ?? 0;
+ 
+
+//     return (
+//       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+//         <input
+//           type="range"
+//           min={0}
+//           max={10}
+//           step={1}
+//           value={value}
+//           disabled={readOnly}
+//           onChange={(e) => handleChange(name, e.target.value)}
+//           style={{ flex: 1 }}
+//         />
+
+//         <input
+//           readOnly
+//           className="input sm light px-2"
+//           value={value}
+//           style={{ width: 35, textAlign: "center" }}
+//         />
+//       </div>
+//     );
+//   };
+
+//   const isInitial = visit === "initial";
+
+//   return (
+//     <div className="form-section-wrap panel panel-default mt-4">
+//       <div className="panel-heading">
+//         <strong>Form MDAAT</strong>
+//       </div>
+
+//       <div className="panel-body mt-3 text-center">
+//         {isInitial ? (
+//           <h5>Case Presentation: Initial</h5>
+//         ) : (
+//           <h5>Case Presentation: Follow up</h5>
+//         )}
+
+//         <hr />
+
+//         <h5>Myositis Disease Activity Assessment Tool (MDAAT)</h5>
+
+
+//         <table className="table theme-table bdr mt-3">
+//           <thead>
+//             <tr>
+//               <th>S/N</th>
+//               <th>Disease Activity</th>
+//               <th>Overall Organ Disease Activity (0-10 cm) VAS</th>
+//               <th>Clinical Features (0,1,2,3,4, NA: Not Assessed)</th>
+//             </tr>
+//           </thead>
+
+//           <tbody>
+
+//             {/* Constitutional */}
+//             <tr>
+//               <td></td>
+//               <td>Constitutional Disease Activity</td>
+//               <td>
+//                 <Slider name="constitutional.vas" />
+//               </td>
+//               <td></td>
+//             </tr>
+
+//             <tr>
+//               <td>1</td>
+//               <td>Pyrexia</td>
+//               <td></td>
+//               <td>
+//                 <Sel name="pyrexia.cf" />
+//               </td>
+//             </tr>
+
+//             <tr>
+//               <td>2</td>
+//               <td>Weight Loss</td>
+//               <td></td>
+//               <td>
+//                 <Sel name="weightLoss.cf" />
+//               </td>
+//             </tr>
+
+//             {/* Cutaneous */}
+//             <tr>
+//               <td></td>
+//               <td>Cutaneous Disease Activity</td>
+//               <td>
+//                 <Slider name="cutaneous.vas" />
+//               </td>
+//               <td></td>
+//             </tr>
+
+//             <tr>
+//               <td>4</td>
+//               <td>Cutaneous Ulceration</td>
+//               <td></td>
+//               <td>
+//                 <Sel name="cutaneousUlceration.cf" />
+//               </td>
+//             </tr>
+
+
+
+           
+//           </tbody>
+//         </table>
+
+//       </div>
+//     </div>
+//   );
+// }

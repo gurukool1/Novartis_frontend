@@ -96,14 +96,26 @@ export const loadForm = (payload, token, { mirrorToLocalStorage = true } = {}) =
     if (res?.data) {
       // Keep existing data processing logic
       const form = res.data.form;
+   console.log("Fetched form datakkkk:", form, "Form ID: lOAD", form.id);
+      const caseId = form.caseId;
+      //const formId = form.id;
+// console.log("Fetched form data:", form, "Case ID:lOAD", caseId, "Form ID: lOAD", formId);
+//        dispatch({
+//         type: "SET_FORM_IDD",
+//         payload: formId,
+//       });
+      dispatch({
+        type: "SET_CASE_ID",
+        payload: caseId,
+      });
       Object.keys(form).forEach(key => {
         // Skip non-form data
         if (key === 'userId' || key === 'caseId' || key === 'createdAt' || !form[key]) {
           return;
         }
-        if (form?.id != null) {
-        dispatch(setFormId(form.id));
-      }
+      //   if (form?.id != null) {
+      //   dispatch(setFormId(form.id));
+      // }
         // Check if it's a form section (contains _initial or _followUp)
         if (key.includes('_initial') || key.includes('_followUp')) {
 

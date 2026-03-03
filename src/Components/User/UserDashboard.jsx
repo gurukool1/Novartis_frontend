@@ -71,15 +71,9 @@ export const UserDashboard = () => {
     // const { formId } = caseItem;
     // const { status } = caseItem;
     const { formId, status, id, alreadyAssigned, isDeleted } = caseItem;
-
+console.log("Case Item in getActionButtons:", caseItem);
     const base = `/user/work-on-case/${caseItem.caseId}/${id}`;
 
-    // const draftPath = `${base}/${formId}`;
-    // const readonlyPath = `${base}/${formId}?view`;
-    //const encodedFileUrl = encodeURIComponent(fileUrl || "");
-
-    // const draftPath = `${base}/${formId}?fileUrl=${encodedFileUrl}`;
-    // const readonlyPath = `${base}/${formId}?fileUrl=${encodedFileUrl}&view`;
 
     const draftPath = `${base}/${formId}`;
     const readonlyPath = `${base}/${formId}?view`;

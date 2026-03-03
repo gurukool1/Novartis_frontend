@@ -8,6 +8,8 @@ import { deleteCaseById } from "../../../Redux/Actions/CaseAction";
 import { Link } from 'react-router-dom';
 import CommonAlert from "../../../CommonComponents/CommonAlert";
 import Pagination from "../../../CommonComponents/Pagination";
+import AnswerSheetIndicator from "../AnswerSheet/AnswerSheetIndicator";
+import { MdOutlineFactCheck } from "react-icons/md"; 
 export const ViewAllCases = () => {
   const dispatch = useDispatch();
   const { cases } = useSelector((state) => state.case);
@@ -67,6 +69,7 @@ export const ViewAllCases = () => {
                   <th className="text-start">Title</th>
                   <th className="text-center">Date</th>
                   <th className="text-center">Time</th>
+                  <th className="text-center">Answer Sheet</th>
                   <th className="text-center">Actions</th>
                 </tr>
               </thead>
@@ -102,8 +105,28 @@ export const ViewAllCases = () => {
                               timeZone: "America/Los_Angeles"
                           })}
                         </td>
+
+                           <td className="text-center">
+                          <div className="d-flex justify-content-center">
+                            <AnswerSheetIndicator
+                              // hasAnswerSheet={caseItem.hasAnswerSheet || false}
+                              // answerSheetType={caseItem.answerSheetType}
+                              hasAnswerSheet={caseItem.isMasterSheetPresent === 1} 
+                               showType={false}
+                            />
+                          </div>
+                        </td>
+                         
                         <td>
                           <div className="d-flex align-items-center justify-content-center">
+
+                               {!caseItem.hasAnswerSheet && (
+                              <Link to={`/admin/answer-sheet?caseId=${caseItem.id}`}>
+                                <span className="badge blue me-1 mb-1">
+                                  <MdOutlineFactCheck fontSize={12} /> Add Answer
+                                </span>
+                              </Link>
+                            )}
                             {/* <Link to={`/admin/view-all/${caseItem.id}/assign`}> */}
                             <Link
                               to={`/admin/view-all/${caseItem.id}/assign`}

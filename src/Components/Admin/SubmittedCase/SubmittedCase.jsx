@@ -8,10 +8,16 @@ import DownloadButton from './DownloadButton';
 import { MdOutlineFactCheck } from "react-icons/md";
 import { AiOutlineEye } from "react-icons/ai";
 import ExportExcel from '../../../CommonComponents/ExportExcel';
+import { commonAxios } from "../../../Global/CommonAxios";
+
 export const SubmittedCase = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const { submittedCases } = useSelector(state => state.case);
+const { caseId, formId } = useSelector(state => state.forms);
+
+   
+  console.log("Case ID:Final", caseId, "Form ID:Final", formId);
   // console.log(submittedCases, "sub")
   useEffect(() => {
     dispatch(getSubmittedCases(setLoading));
@@ -31,7 +37,7 @@ export const SubmittedCase = () => {
         });
   };
 
-
+ 
   const formatTime = (dateString) =>
     new Date(dateString).toLocaleTimeString('en-US', { 
             hour: "2-digit", 
@@ -70,29 +76,15 @@ export const SubmittedCase = () => {
   const getActionButtons = (caseItem) => {
     const { formId, status, id, alreadyAssigned } = caseItem; // Get formType from caseItem
     const base = `/admin/work-on-case/${caseItem.caseId}/${id}`;
-    //const encodedFileUrl = encodeURIComponent(fileUrl || "");
-
-    // Pass formType as query parameter
-    // const draftPath = `${base}/${formId}`;
+ 
     const readonlyPath = `${base}/${formId}?view`;
-
-    //   return (
-    //     // ... existing buttons ...
-    //   );
-    // };
-    // // ... existing code ...
-
-
 
     return (
       <>
 
         {alreadyAssigned === 1 && (
           <>
-            {/* <span className="badge green me-1 mb-1">
-              <MdOutlineFactCheck /> Submitted
-            </span> */}
-
+  
             <Link to={readonlyPath} className="badge blue me-1 mb-1">
               <AiOutlineEye /> View
             </Link>
@@ -119,17 +111,8 @@ export const SubmittedCase = () => {
         </div>
       </div>
 
-      {/* <div className="chart-container">
-        <div className="d-flex align-items-center justify-content-between gap-2">
-          <h3>Cases Management</h3>
-          <ExportExcel
-            data={exportData}
-            fileName="summary_report"
-            className="green"
-          />
-        </div> */}
 
-
+ 
       <div className="table-outer mt-3">
         <div className="table-responsive scrollbar-clr">
           <table className="table theme-table bdr">
