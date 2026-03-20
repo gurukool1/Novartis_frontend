@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -12,6 +13,7 @@ export default function Form6({ visit = "initial", readOnly = false, FORM_COUNT 
   const dispatch = useDispatch();
   const hairlossopts = [0, 1];
   const key = makeKey("Alopecia", visit);
+  const getFieldStyle = useDiscrepancyStyles(`Alopecia_${visit}`);
   const saved = useSelector(
     (state) => selectSectionData(key)(state),
     shallowEqual
@@ -79,7 +81,7 @@ export default function Form6({ visit = "initial", readOnly = false, FORM_COUNT 
                 <td style={{ padding: "12px" }}>
                   <select
                     className="input sm light px-2"
-                    style={{ width: "72px" }}
+                    style={{ width: "72px", ...getFieldStyle("hairLoss") }}
                     value={hairLoss}
                     onChange={(e) => setHairLoss(e.target.value)}
                     disabled={readOnly}

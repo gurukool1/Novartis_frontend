@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   // pushSectionTotal,
   pushSectionData,
@@ -13,6 +14,7 @@ export default function Form7({ visit = "initial", readOnly = false, FORM_COUNT 
 
   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
   const key = makeKey("MDAAT", visit);
+  const getFieldStyle = useDiscrepancyStyles(`MDAAT_${visit}`);
 
   const saved = useSelector(selectSectionData(key), shallowEqual);
 
@@ -39,7 +41,7 @@ useEffect(() => {
   const Sel = ({ opts, name }) => (
     <select
       className="input sm light px-2"
-      style={{ width: "72px" }}
+      style={{ width: "72px", ...getFieldStyle(name) }}
       value={scores[name] ?? ""}
       onChange={(e) => setScores((p) => ({ ...p, [name]: e.target.value }))}
       disabled={readOnly}
@@ -70,7 +72,7 @@ useEffect(() => {
           step={1}
           value={value}
           onChange={handle}
-          style={{ flex: 1 }}
+          style={{ flex: 1, ...getFieldStyle(name) }}
           disabled={readOnly}
         />
 
@@ -78,7 +80,7 @@ useEffect(() => {
           readOnly
           className="input sm light px-2"
           value={value}
-          style={{ width: 34, textAlign: "center" }}
+          style={{ width: 34, textAlign: "center", ...getFieldStyle(name) }}
         />
       </div>
     );
@@ -654,6 +656,7 @@ useEffect(() => {
                         value={scores["oda.specify"] || ""}
                         onChange={(e) => setScores((p) => ({ ...p, ["oda.specify"]: e.target.value }))}
                         disabled={readOnly}
+                        style={{ ...getFieldStyle("oda.specify") }}
                       />
                     </td>
                     <td>

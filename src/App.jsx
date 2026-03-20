@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
 import Alert from './CommonComponents/Alert';
@@ -33,11 +33,11 @@ import { Instruction } from "./Components/User/Instruction.jsx"
 import { AnswerSheet } from './Components/Admin/AnswerSheet/AnswerSheet';
 function App() {
   const alert = useSelector(state => state.alert)
+  const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  const fetchUser = () => {
-    dispatch(loadUser())
-  }
+
 
 
   useEffect(() => {
@@ -52,8 +52,14 @@ function App() {
 
 
   useEffect(() => {
-    fetchUser()
-  }, [])
+    dispatch(loadUser())
+  }, [dispatch])
+
+  useEffect(() => {
+    if (auth && auth.isAuthenticated === false) {
+      navigate('/')
+    }
+  }, [auth, navigate])
 
 
   return (
@@ -61,7 +67,7 @@ function App() {
       <Alert />
       <div>
 
-        <BrowserRouter>
+        {/* <BrowserRouter> */}
           <Routes>
             <Route exact path="/" element={<Login />} />
             <Route exact path="/forgot-password" element={<ForgotPassword />} />
@@ -106,7 +112,7 @@ function App() {
             <Route exact path="/admin/work-on-case/:caseid/:id/:formid?" element={<SubmittedForm></SubmittedForm>}></Route>
 
           </Routes>
-        </BrowserRouter>
+        {/* </BrowserRouter> */}
       </div>
     </div>
 

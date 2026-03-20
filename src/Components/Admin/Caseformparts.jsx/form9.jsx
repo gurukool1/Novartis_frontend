@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   // pushSectionTotal,
   pushSectionData,
@@ -12,7 +13,7 @@ export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT 
     const dispatch = useDispatch();
 
     const key = makeKey("Physician", visit);
-
+  const getFieldStyle = useDiscrepancyStyles(`Physician_${visit}`);
     const saved = useSelector(selectSectionData(key), shallowEqual);
     const savedValue = Number(saved?.["Physicianglobal"]?? 0) || 0;
 
@@ -58,7 +59,7 @@ export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT 
                             <strong className="text-dark">Please rate patient's global (overall) disease activity</strong>
                             <div className="slider-section text-center mt-3 px-3">
                                 <div>Selected Value: <strong>{scores?? 0}</strong></div>
-                                <div style={{ position: "relative", margin: "20px 0" }}>
+                                <div style={{ position: "relative", margin: "20px 0", ...getFieldStyle("Physicianglobal") }}>
                                 <div style={{
                                     height: 6,
                                     background: "rgb(187 187 187)",
@@ -104,7 +105,8 @@ export default function Form9({ visit = "initial", readOnly = false, FORM_COUNT 
                                     width: "100%",
                                     height: 20,
                                     opacity: 0,
-                                    cursor: "pointer"
+                                    cursor: "pointer",
+                                    ...getFieldStyle("Physicianglobal")
                                     }}
                                 />
                                 </div>

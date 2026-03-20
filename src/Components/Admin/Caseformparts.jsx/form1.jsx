@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -33,6 +34,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT}
   }, [saved]);
 
   const isInitial = visit === "initial";
+  const getFieldStyle = useDiscrepancyStyles(`MMT_8_${visit}`);
 
   const handleChange = (muscle, side) => (e) => {
     setScores((prev) => ({ ...prev, [`${muscle}.${side}`]: e.target.value }));
@@ -138,7 +140,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT}
                     <td>
                       <select
                         className="input sm light px-2"
-                        style={{ width: "72px" }}
+                        style={{ width: "72px", ...getFieldStyle("Neck Flexor.axial") }}
                         value={scores["Neck Flexor.axial"] ?? ""}
                         onChange={handleChange("Neck Flexor", "axial")}
                         disabled={readOnly}
@@ -170,7 +172,7 @@ export default function Form1({ visit = "initial", readOnly = false, FORM_COUNT}
                             {row.cols.includes(side) ? (
                               <select
                                 className="input sm light px-2"
-                                style={{ width: "72px" }}
+                                style={{ width: "72px", ...getFieldStyle(`${row.label}.${side}`) }}
                                 value={scores[`${row.label}.${side}`] ?? ""}
                                 onChange={handleChange(row.label, side)}
                                 disabled={readOnly}

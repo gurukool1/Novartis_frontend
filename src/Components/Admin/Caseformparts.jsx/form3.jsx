@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -46,6 +47,7 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
   }, [saved]);
 
   const isInitial = visit === "initial";
+  const getFieldStyle = useDiscrepancyStyles(`CDASI_Damage_${visit}`);
 
   const handleChange = (loc, field) => (e) =>
     setScores((p) => ({ ...p, [`${loc}.${field}`]: e.target.value }));
@@ -133,7 +135,7 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                       <td>
                         <select
                           className="input sm light px-2"
-                          style={{ width: "72px" }}
+                          style={{ width: "72px", ...getFieldStyle(`${loc}.poikilo`) }}
                           value={scores[`${loc}.poikilo`] ?? ""}
                           onChange={handleChange(loc, "poikilo")}
                           disabled={readOnly}
@@ -150,7 +152,7 @@ export default function Form3({ visit = "initial", readOnly = false, FORM_COUNT 
                       <td>
                         <select
                           className="input sm light px-2"
-                          style={{ width: "72px" }}
+                          style={{ width: "72px", ...getFieldStyle(`${loc}.calcinosis`) }}
                           value={scores[`${loc}.calcinosis`] ?? ""}
                           onChange={handleChange(loc, "calcinosis")}
                           disabled={readOnly}

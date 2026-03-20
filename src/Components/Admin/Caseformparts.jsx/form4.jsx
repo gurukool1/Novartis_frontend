@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -17,6 +18,7 @@ export default function Form4({ visit = "initial", readOnly = false,FORM_COUNT }
   const DAMAGE_OPTS = [0, 1, 2];
   const YESNO_OPTS = ["yes", "no"];
   const key = makeKey("Gottron_Hands", visit);
+  const getFieldStyle = useDiscrepancyStyles(`Gottron_Hands_${visit}`);
 
   const saved = useSelector(
     (state) => selectSectionData(key)(state),
@@ -182,7 +184,7 @@ export default function Form4({ visit = "initial", readOnly = false,FORM_COUNT }
                   >
                     <select
                       className="input sm light px-2"
-                      style={{ width: 72 }}
+                      style={{ width: 72, ...getFieldStyle("score") }}
                       value={score}
                       onChange={(e) => setScore(e.target.value)}
                       disabled={readOnly}
@@ -214,7 +216,7 @@ export default function Form4({ visit = "initial", readOnly = false,FORM_COUNT }
                   >
                     <select
                       className="input sm light px-2"
-                      style={{ width: 72 }}
+                      style={{ width: 72, ...getFieldStyle("ulcer") }}
                       value={ulcer}
                       onChange={(e) => setUlcer(e.target.value)}
                       disabled={readOnly}
@@ -249,7 +251,7 @@ export default function Form4({ visit = "initial", readOnly = false,FORM_COUNT }
                   >
                     <select
                       className="input sm light px-2"
-                      style={{ width: 72 }}
+                      style={{ width: 72, ...getFieldStyle("damage") }}
                       value={damage}
                       onChange={(e) => setDamage(e.target.value)}
                       disabled={readOnly}
@@ -287,7 +289,7 @@ export default function Form4({ visit = "initial", readOnly = false,FORM_COUNT }
                   >
                     <select
                       className="input sm light px-2"
-                      style={{ width: 72 }}
+                      style={{ width: 72, ...getFieldStyle("papule") }}
                       value={papule}
                       onChange={(e) => setPapule(e.target.value)}
                       disabled={readOnly}

@@ -120,13 +120,27 @@ export const ViewAllCases = () => {
                         <td>
                           <div className="d-flex align-items-center justify-content-center">
 
-                               {!caseItem.hasAnswerSheet && (
+                               {/* {!caseItem.hasAnswerSheet && (
                               <Link to={`/admin/answer-sheet?caseId=${caseItem.id}`}>
                                 <span className="badge blue me-1 mb-1">
                                   <MdOutlineFactCheck fontSize={12} /> Add Answer
                                 </span>
                               </Link>
-                            )}
+                            )} */}
+
+                            {caseItem.isMasterSheetPresent === 1 ? (
+  <Link to={`/admin/answer-sheet?caseId=${caseItem.id}&mode=edit`}>
+    <span className="badge blue me-1 mb-1">
+      <MdOutlineFactCheck fontSize={12} /> Update Answer
+    </span>
+  </Link>
+) : (
+  <Link to={`/admin/answer-sheet?caseId=${caseItem.id}`}>
+    <span className="badge blue me-1 mb-1">
+      <MdOutlineFactCheck fontSize={12} /> Add Answer
+    </span>
+  </Link>
+)}
                             {/* <Link to={`/admin/view-all/${caseItem.id}/assign`}> */}
                             <Link
                               to={`/admin/view-all/${caseItem.id}/assign`}

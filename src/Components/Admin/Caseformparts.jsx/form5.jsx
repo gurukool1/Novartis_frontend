@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -12,6 +13,7 @@ export default function Form5({ visit = "initial", readOnly = false, FORM_COUNT 
   const dispatch = useDispatch();
   const PERI_OPTS = [0, 1, 2];
   const key = makeKey("Periungual", visit);
+  const getFieldStyle = useDiscrepancyStyles(`Periungual_${visit}`);
   const saved = useSelector(
     (state) => selectSectionData(key)(state),
     shallowEqual
@@ -85,7 +87,7 @@ export default function Form5({ visit = "initial", readOnly = false, FORM_COUNT 
                 <td style={{ padding: "12px" }}>
                   <select
                     className="input sm light px-2"
-                    style={{ width: 72 }}
+                    style={{ width: 72, ...getFieldStyle("peri") }}
                     value={peri}
                     onChange={(e) => setPeri(e.target.value)}
                     disabled={readOnly}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { submitAnswerSheet, getAnswerSheet, updateMasterSheet, deleteAnswerSheet } from '../../../Redux/Actions/AnswerSheetAction';
 import { getAllCases } from '../../../Redux/Actions/CaseAction';
 import { setAlert } from '../../../Redux/Actions/AlertActions';
+import CommonAlert from '../../../CommonComponents/CommonAlert';
 import Form1 from "../../../CommonComponents/caseFormManual/form1";
 import Form2 from "../../../CommonComponents/caseFormManual/form2";
 import Form3 from "../../../CommonComponents/caseFormManual/form3";
@@ -17,14 +18,18 @@ const ManualAnswerSheet = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { cases } = useSelector(state => state.case);
-    const { user, token } = useSelector((state) => state.auth);
+    const { user } = useSelector((state) => state.auth);
     console.log("User in ManualAnswerSheet:", user);
   const [selectedCaseId, setSelectedCaseId] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [answerData, setAnswerData] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(''); // 'update' | 'delete'
+  const [pendingPayload, setPendingPayload] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   //console.log(answerData.id, "ANSWER DATA IN COMPONENT");
-  const { answerSheets } = useSelector(state => state.answerSheets);
+  const isEditMode = Boolean(answerData?.id);
 
 
   useEffect(() => {
@@ -53,62 +58,126 @@ const ManualAnswerSheet = () => {
     }));
   };
 
+  const performSubmit = async (payload) => {
+    setSaving(true);
+
+    let result;
+    if (answerData?.id) {
+      result = await dispatch(updateMasterSheet(answerData.id, payload, setSaving));
+    } else {
+      result = await dispatch(submitAnswerSheet(payload, setSaving));
+    }
+
+    setSaving(false);
+
+    if (result?.success) {
+      dispatch(
+        setAlert(
+          answerData?.id ? 'Answer sheet updated successfully' : 'Answer sheet submitted successfully',
+          'success'
+        )
+      );
+      setTimeout(() => {
+        navigate('/admin/documents');
+      }, 1500);
+      return true;
+    }
+
+    dispatch(setAlert(result?.msg || result?.error || 'Could not submit answer sheet', 'danger'));
+    return false;
+  };
+
+  const performDelete = async () => {
+    if (!answerData?.id) {
+      dispatch(setAlert('No answer sheet to delete.', 'warning'));
+      return false;
+    }
+
+    setConfirmLoading(true);
+    const result = await dispatch(deleteAnswerSheet(answerData.id, selectedCaseId));
+    setConfirmLoading(false);
+
+    if (result?.success) {
+      setAnswerData({});
+      dispatch(setAlert('Answer sheet deleted successfully', 'success'));
+      setShowConfirm(false);
+      return true;
+    }
+
+    dispatch(setAlert(result?.msg || result?.error || 'Could not delete answer sheet', 'danger'));
+    return false;
+  };
+
+  const handleConfirm = async () => {
+    if (confirmAction === 'update' || confirmAction === 'create') {
+      if (pendingPayload) {
+        await performSubmit(pendingPayload);
+      }
+    } else if (confirmAction === 'delete') {
+      await performDelete();
+    }
+
+    setConfirmAction('');
+    setPendingPayload(null);
+    setShowConfirm(false);
+  };
+
+  const handleCloseConfirm = () => {
+    setShowConfirm(false);
+    setConfirmAction('');
+    setPendingPayload(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedCaseId) {
       dispatch(setAlert('Please select a case', 'warning'));
       return;
     }
 
-    setSaving(true);
-    
+    const isEditMode = Boolean(answerData?.id);
+
+    const firstEmptyField = Array.from(
+      document.querySelectorAll('.manual-answer-sheet select:not([disabled])')
+    ).find((select) => !select.value || select.value === '');
+
+    if (firstEmptyField) {
+      firstEmptyField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => firstEmptyField.focus(), 300);
+      dispatch(setAlert('Please fill all required fields', 'warning'));
+      return;
+    }
+
     const payload = {
       caseId: selectedCaseId,
       answerType: 'manual',
       formData: answerData,
-      created_by:user?.id 
+      created_by: user?.id,
     };
 
-  let result;
-
-  if (answerData?.id) {
-    result = await dispatch(
-      updateMasterSheet(answerData.id, payload, setSaving)
-    );
-  } 
-
-  else {
-    result = await dispatch(
-      submitAnswerSheet(payload, setSaving)
-    );
-  }
-
-   //const result = await dispatch(submitAnswerSheet(payload, setSaving));
-    
-    if (result?.success) {
-   setTimeout(() => {
-        navigate('/admin/documents');
-      }, 1500);
+    if (isEditMode) {
+      setPendingPayload(payload);
+      setConfirmAction('update');
+      setShowConfirm(true);
+      return;
     }
+
+    await performSubmit(payload);
   };
-useEffect(() => {
+
+  useEffect(() => {
   dispatch(getAllCases());
 }, [dispatch]);
 
-const isEditMode = Boolean(answerData?.id);
-
-
- const handleDeleteAnswerSheet = async () => {
-  if (!answerData?.id) return; // no sheet to delete
-
-  const confirmed = window.confirm('Are you sure you want to delete this answer sheet?');
-  if (!confirmed) return;
-
-  const result = await dispatch(deleteAnswerSheet(answerData.id, selectedCaseId));
-  if (result?.success) {
-    setAnswerData({}); // clear form
+const handleDeleteAnswerSheet = () => {
+  if (!answerData?.id) {
+    dispatch(setAlert('No answer sheet to delete.', 'warning'));
+    return;
   }
+
+  setConfirmAction('delete');
+  setShowConfirm(true);
 };
 
 
@@ -281,6 +350,19 @@ const isEditMode = Boolean(answerData?.id);
           )}
         </>
       )}
+
+      <CommonAlert
+        show={showConfirm}
+        handleClose={handleCloseConfirm}
+        handleConfirm={handleConfirm}
+        message={
+          confirmAction === 'delete'
+            ? 'Are you sure you want to delete this answer sheet?'
+            : 'Are you sure you want to update this answer sheet?'
+        }
+        cancelButton="Cancel"
+        confirmButton={confirmLoading ? 'Processing...' : confirmAction === 'delete' ? 'Delete' : 'Confirm'}
+      />
     </div>
   );
 };

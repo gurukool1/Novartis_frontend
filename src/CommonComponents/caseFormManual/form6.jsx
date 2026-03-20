@@ -9,7 +9,7 @@ export default function Form6({
   const HAIRLOSS_OPTS = [0, 1];
 
   const handleChange = (e) => {
-    const updated = { alopecia: e.target.value };
+    const updated = { hairLoss: e.target.value };
     onChange(updated);
   };
 
@@ -56,7 +56,7 @@ export default function Form6({
                     <select
                       className="input sm light px-2"
                       style={{ width: "72px" }}
-                      value={scores.alopecia || ""}
+                      value={scores.hairLoss || ""}
                       onChange={handleChange}
                       disabled={readOnly}
                     >

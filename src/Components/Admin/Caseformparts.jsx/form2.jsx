@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useDiscrepancyStyles } from "../AnswerSheet/useDiscrepancyStyles";
 import {
   pushSectionTotal,
   pushSectionData,
@@ -42,6 +43,7 @@ export default function Form2({ visit = "initial", readOnly = false, FORM_COUNT 
   }, [saved]);
 
   const isInitial = visit === "initial";
+  const getFieldStyle = useDiscrepancyStyles(`CDASI_Activity_${visit}`);
 
   const handleChange = (loc, field) => (e) =>
     setScores((prev) => ({ ...prev, [`${loc}.${field}`]: e.target.value }));
@@ -160,7 +162,7 @@ export default function Form2({ visit = "initial", readOnly = false, FORM_COUNT 
                       <td>
                         <select
                           className="input sm light px-2"
-                          style={{ width: "72px" }}
+                          style={{ width: "72px", ...getFieldStyle(`${loc}.erythema`) }}
                           value={scores[`${loc}.erythema`] ?? ""}
                           onChange={handleChange(loc, "erythema")}
                           disabled={readOnly}
@@ -176,7 +178,7 @@ export default function Form2({ visit = "initial", readOnly = false, FORM_COUNT 
                       <td>
                         <select
                           className="input sm light px-2"
-                          style={{ width: "72px" }}
+                          style={{ width: "72px", ...getFieldStyle(`${loc}.scale`) }}
                           value={scores[`${loc}.scale`] ?? ""}
                           onChange={handleChange(loc, "scale")}
                           disabled={readOnly}
@@ -192,7 +194,7 @@ export default function Form2({ visit = "initial", readOnly = false, FORM_COUNT 
                       <td>
                         <select
                           className="input sm light px-2"
-                          style={{ width: "72px" }}
+                          style={{ width: "72px", ...getFieldStyle(`${loc}.erosion`) }}
                           value={scores[`${loc}.erosion`] ?? ""}
                           onChange={handleChange(loc, "erosion")}
                           disabled={readOnly}
