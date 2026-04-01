@@ -1,101 +1,6 @@
-// import React from "react";
-
-// export default function Form1({
-//   visit = "initial",
-//   readOnly = false,
-//   scores = {},
-//   onChange
-// }) {
-//   const muscles = [
-//     "Neck Flexors",
-//     "Deltoids",
-//     "Biceps",
-//     "Wrist Extensors",
-//     "Quadriceps",
-//     "Ankle Dorsiflexors"
-//   ];
-
-//   const sides = ["Right", "Left", "Axial"];
-//   const SCORE_OPTIONS = [...Array(11).keys()].concat("NA");
-
-//   const handleChange = (muscle, side) => (e) => {
-//     const updated = {
-//       ...scores,
-//       [`${muscle}.${side}`]: e.target.value
-//     };
-//     onChange(updated);
-//   };
-
-//   const total = Object.values(scores)
-//     .filter((v) => v !== "" && v !== "NA")
-//     .map(Number)
-//     .reduce((a, b) => a + b, 0);
-
-//   return (
-//     <div className="form-section-wrap mt-4">
-//       <div className="panel-body mt-3">
-//         <div className="table-container text-center">
-//           <h5>MMT-8 ({visit})</h5>
-//           <hr className="horizontal-rule my-2" />
-//           <div className="table-outer mt-3">
-//             <div className="table-responsive scrollbar-clr">
-//               <table className="table theme-table bdr">
-//                 <thead>
-//                   <tr>
-//                     <th>Muscle Group</th>
-//                     <th style={{ width: 220 }}>Right <br /> (0‑10) <br /> NA</th>
-//                     <th style={{ width: 210 }}>Left <br /> (0‑10) <br /> NA</th>
-//                     <th style={{ width: 210 }}>Axial <br /> (0‑10) <br /> NA</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {muscles.map((muscle) => (
-//                     <tr key={muscle}>
-//                       <td>{muscle}</td>
-//                       {sides.map((side) => (
-//                         <td key={side}>
-//                           <select
-//                             className="input sm light px-2"
-//                             style={{ width: "72px" }}
-//                             value={scores[`${muscle}.${side}`] ?? ""}
-//                             onChange={handleChange(muscle, side)}
-//                             disabled={readOnly}
-//                           >
-//                             <option value="">Select</option>
-//                             {SCORE_OPTIONS.map((opt) => (
-//                               <option key={opt} value={opt}>
-//                                 {opt}
-//                               </option>
-//                             ))}
-//                           </select>
-//                         </td>
-//                       ))}
-//                     </tr>
-//                   ))}
-
-//                   <tr className="total-scoring-value">
-//                     <td>Total Score</td>
-//                     <td colSpan={3}>
-//                       <input
-//                         type="text"
-//                         className="input sm light"
-//                         value={total}
-//                         readOnly
-//                       />
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import React, { useMemo, useEffect } from "react";
+import RangeInput from "./RangeInput";
+import { isRangeValue, computeRangeTotal, normalizeScoresToRange } from "./rangeUtils";
 
 export default function Form1({
   visit = "initial",
@@ -117,14 +22,14 @@ export default function Form1({
     { label: "Ankle Dorsiflexion", cols: ["right", "left"] }
   ];
 
-  const SCORE_OPTIONS = [...Array(11).keys()].concat("NA");
+  const SCORE_OPTIONS = [...Array(11).keys()]; // 0–10
 
   const isInitial = visit === "initial";
 
-  const handleChange = (muscle, side) => (e) => {
+  const handleChange = (muscle, side) => (newValue) => {
     const updated = {
       ...scores,
-      [`${muscle}.${side}`]: e.target.value
+      [`${muscle}.${side}`]: newValue
     };
     onChange(updated);
   };
@@ -138,9 +43,12 @@ export default function Form1({
         return acc;
       }, 0) + 1; // +1 for Neck Flexor axial
 
-    const filledFields = Object.values(scores).filter(
-      (val) => val !== "" && val !== "NA"
-    ).length;
+    const filledFields = Object.values(scores).filter((val) => {
+      if (val === "" || val === undefined || val === null) return false;
+      if (val === "NA") return false;
+      if (isRangeValue(val) && (val.min === "" || val.max === "")) return false;
+      return true;
+    }).length;
 
     const rawPercent = (filledFields / totalFields) * 100;
     const scaledPercent = rawPercent * (1 / FORM_COUNT);
@@ -160,16 +68,22 @@ export default function Form1({
     const perSide = { right: 0, left: 0, axial: 0 };
 
     Object.entries(scores).forEach(([key, val]) => {
-      if (val === "" || val === "NA") return;
+      if (val === "" || val === "NA" || val === undefined || val === null) return;
       const [, side] = key.split(".");
       if (perSide[side] !== undefined) {
-        perSide[side] += Number(val);
+        if (isRangeValue(val)) {
+          const min = Number(val.min) || 0;
+          const max = Number(val.max) || 0;
+          perSide[side] += (min + max) / 2;
+        } else {
+          perSide[side] += Number(val);
+        }
       }
     });
 
     const total = perSide.right + perSide.left + perSide.axial;
 
-    return { perSide, total };
+    return { perSide, total: Math.round(total * 100) / 100 };
   }, [scores]);
 
   /* ---------------- UI ---------------- */
@@ -226,20 +140,13 @@ export default function Form1({
                     <td></td>
                     <td></td>
                     <td>
-                      <select
-                        className="input sm light px-2"
-                        style={{ width: "72px" }}
-                        value={scores["Neck Flexor.axial"] ?? ""}
+                      <RangeInput
+                        value={scores["Neck Flexor.axial"]}
                         onChange={handleChange("Neck Flexor", "axial")}
+                        options={SCORE_OPTIONS}
                         disabled={readOnly}
-                      >
-                        <option value="">Select</option>
-                        {SCORE_OPTIONS.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
+                        allowNA={true}
+                      />
                     </td>
                   </tr>
 
@@ -257,20 +164,13 @@ export default function Form1({
                         {["right", "left", "axial"].map((side) => (
                           <td key={side}>
                             {row.cols.includes(side) ? (
-                              <select
-                                className="input sm light px-2"
-                                style={{ width: "72px" }}
-                                value={scores[`${row.label}.${side}`] ?? ""}
+                              <RangeInput
+                                value={scores[`${row.label}.${side}`]}
                                 onChange={handleChange(row.label, side)}
+                                options={SCORE_OPTIONS}
                                 disabled={readOnly}
-                              >
-                                <option value="">Select</option>
-                                {SCORE_OPTIONS.map((opt) => (
-                                  <option key={opt} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                              </select>
+                                allowNA={true}
+                              />
                             ) : null}
                           </td>
                         ))}
@@ -291,7 +191,7 @@ export default function Form1({
                       <input
                         type="text"
                         className="input sm light"
-                        value={summary.perSide.right}
+                        value={Math.round(summary.perSide.right * 100) / 100}
                         readOnly
                       />
                     </td>
@@ -299,7 +199,7 @@ export default function Form1({
                       <input
                         type="text"
                         className="input sm light"
-                        value={summary.perSide.left}
+                        value={Math.round(summary.perSide.left * 100) / 100}
                         readOnly
                       />
                     </td>
@@ -307,7 +207,7 @@ export default function Form1({
                       <input
                         type="text"
                         className="input sm light"
-                        value={summary.perSide.axial}
+                        value={Math.round(summary.perSide.axial * 100) / 100}
                         readOnly
                       />
                     </td>

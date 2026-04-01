@@ -51,7 +51,7 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
   
   // Headers for the table
   const tableHeader = new TableRow({
-    children: ["Section", "Field", "Your Answer", "Expected Answer", "Deviation", "Status"].map(
+    children: ["Section", "Field", "Your Answer", "Expected", "Deviation", "Status"].map(
       (text) =>
         new TableCell({
           children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
@@ -64,12 +64,28 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
   const discrepancyRows = discrepancies.map((d) => {
     // Determine friendly label
     const friendlyLabel =
-      d.status === "RANGED_MISMATCH" ? "Out of Range"
-        : d.status === "MISMATCH" ? "Mismatch"
-          : "Matched";
+      d.status === "OUT_OF_RANGE" ? "Out of Range"
+        : d.status === "RANGED_MISMATCH" ? "Out of Range"
+          : d.status === "MISMATCH" ? "Mismatch"
+            : "Matched";
 
-    const isMismatch = d.status === "MISMATCH";
+    const isMismatch = d.status === "MISMATCH" || d.status === "RANGED_MISMATCH" || d.status === "OUT_OF_RANGE";
     const statusColor = isMismatch ? "991b1b" : "065f46";
+
+    // Format expected value: show range if available
+    // const expectedText = d.expectedValue
+    //   ? `${d.expectedValue.min} – ${d.expectedValue.max}`
+    //   : d.expectedValue != null ? String(d.expectedValue) : "—";
+
+
+    const expectedText = (() => {
+      if (d.expectedValue === "NA") return "NA";
+      if (d.expectedValue && typeof d.expectedValue === "object") {
+        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
+        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+      }
+      return d.expectedValue != null ? String(d.expectedValue) : "—";
+    })();
 
     return new TableRow({
       children: [
@@ -79,7 +95,7 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
           children: [new Paragraph({ children: [new TextRun({ text: d.actualValue != null ? String(d.actualValue) : "not submitted", color: statusColor, bold: true })] })],
           margins: { top: 70, bottom: 70, left: 70, right: 70 }
         }),
-        new TableCell({ children: [new Paragraph(d.expectedValue != null ? String(d.expectedValue) : "—")], margins: { top: 70, bottom: 70, left: 70, right: 70 } }),
+        new TableCell({ children: [new Paragraph(expectedText)], margins: { top: 70, bottom: 70, left: 70, right: 70 } }),
         new TableCell({
           children: [new Paragraph({ children: [new TextRun({ text: d.deviation > 0 ? `+${d.deviation}` : d.deviation != null ? String(d.deviation) : "—" })] })],
           margins: { top: 70, bottom: 70, left: 70, right: 70 }
@@ -125,12 +141,12 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
               new TextRun(`${stats.totalFields ?? 0}`),
             ],
           }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: `Exact Matches: `, bold: true }),
-              new TextRun(`${stats.exactMatches ?? 0}`),
-            ],
-          }),
+          // new Paragraph({
+          //   children: [
+          //     new TextRun({ text: `Exact Matches: `, bold: true }),
+          //     new TextRun(`${stats.exactMatches ?? 0}`),
+          //   ],
+          // }),
           new Paragraph({
             children: [
               new TextRun({ text: `Ranged Match: `, bold: true }),

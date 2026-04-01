@@ -1,85 +1,6 @@
-// import { useMemo } from "react";
-
-// export default function Form7({
-//   visit = "initial",
-//   readOnly = false,
-//   FORM_COUNT,
-//   formData = {},
-//   setFormData,
-// }) {
-//   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
-
-//   const handleChange = (name, value) => {
-//     setFormData((prev) => ({
-//       ...prev,
-//       [name]: value === "NA" ? "NA" : Number(value),
-//     }));
-//   };
-
-//   const percentFilled = useMemo(() => {
-//     const totalFields = 50;
-
-//     const filled = Object.values(formData).filter(
-//       (v) => v !== "" && v !== undefined
-//     ).length;
-
-//     return (filled / totalFields) * (100 / FORM_COUNT);
-//   }, [formData, FORM_COUNT]);
-
-//   const Sel = ({ name }) => (
-//     <select
-//       className="input sm light px-2"
-//       style={{ width: 72 }}
-//       value={formData[name] ?? ""}
-//       disabled={readOnly}
-//       onChange={(e) => handleChange(name, e.target.value)}
-//     >
-//       <option value="">Select</option>
-//       {CF_OPTS.map((o) => (
-//         <option key={o} value={o}>
-//           {o}
-//         </option>
-//       ))}
-//     </select>
-//   );
-
-//   const Slider = ({ name }) => {
-//     const value = Number(formData[name] ?? 0);
-
-//     return (
-//       <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-//         <input
-//           type="range"
-//           min={0}
-//           max={10}
-//           step={1}
-//           value={value}
-//          // disabled={readOnly}
-//           onChange={(e) => handleChange(name, e.target.value)}
-//           style={{ flex: 1 }}
-//         />
-//         <input
-//           readOnly
-//           className="input sm light px-2"
-//           value={value}
-//           style={{ width: 34, textAlign: "center" }}
-//         />
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <div>
-//       {/* Your existing table stays SAME */}
-//       {/* Only Sel & Slider now use handleChange */}
-//     </div>
-//   );
-// }
-
-
-
-
 import React from "react";
+import RangeInput from "./RangeInput";
+import { isRangeValue } from "./rangeUtils";
 
 export default function Form7({
   visit = "initial",
@@ -88,84 +9,124 @@ export default function Form7({
   onChange,
   FORM_COUNT = 1,
 }) {
-  const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
-  const totalFields = 51; // total fields for percent calculation
+  const CF_OPTS = [0, 1, 2, 3, 4]; // NA handled via allowNA
+  const totalFields = 51;
 
   // Stable handler for changes
-  const handleChange = (name) => (e) => {
-    const value = e.target.value;
+  const handleChange = (name) => (newValue) => {
     onChange({
       ...scores,
-      [name]: value === "NA" ? "NA" : value === "" ? "" : Number(value),
+      [name]: newValue,
     });
   };
 
-  const isFieldEmpty = (name) =>
-    scores[name] === undefined || scores[name] === null || scores[name] === "";
+  // Handler for text input fields (like oda.specify)
+  const handleTextChange = (name) => (e) => {
+    onChange({
+      ...scores,
+      [name]: e.target.value,
+    });
+  };
 
   const percentFilled =
-    (Object.values(scores).filter((v) => v !== "" && v !== undefined && v !== null).length /
-      totalFields) *
+    (Object.values(scores).filter(
+      (v) => {
+        if (v === "" || v === undefined || v === null) return false;
+        if (v === "NA") return true;
+        if (isRangeValue(v) && (v.min === "" || v.max === "")) return false;
+        return true;
+      }
+    ).length / totalFields) *
     (100 / FORM_COUNT);
 
   const isInitial = visit === "initial";
 
-  // Slider Component
-  const Slider = ({ name }) => {
-    const value =
-      scores[name] === "" || scores[name] === null || scores[name] === undefined
-        ? 0
-        : Number(scores[name]);
+  // Range-based Slider Component (two sliders for min/max)
+  const RangeSlider = ({ name }) => {
+    const val = scores[name];
+    let minVal = 0;
+    let maxVal = 0;
+
+    if (isRangeValue(val)) {
+      minVal = Number(val.min) || 0;
+      maxVal = Number(val.max) || 0;
+    } else if (val !== "" && val !== null && val !== undefined) {
+      minVal = Number(val) || 0;
+      maxVal = Number(val) || 0;
+    }
+
+    const onMinSliderChange = (e) => {
+      const v = Number(e.target.value);
+      const currentMax = isRangeValue(scores[name]) ? Number(scores[name].max) || 0 : maxVal;
+      onChange({
+        ...scores,
+        [name]: { min: v, max: Math.max(v, currentMax) },
+      });
+    };
+
+    const onMaxSliderChange = (e) => {
+      const v = Number(e.target.value);
+      const currentMin = isRangeValue(scores[name]) ? Number(scores[name].min) || 0 : minVal;
+      onChange({
+        ...scores,
+        [name]: { min: Math.min(currentMin, v), max: v },
+      });
+    };
 
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 4 }}>
+          <span style={{ fontSize: 10, color: "#888", fontWeight: 600, minWidth: 24 }}>Min</span>
           <input
             type="range"
             min={0}
             max={10}
             step={1}
-            value={value}
+            value={minVal}
             disabled={readOnly}
-            onChange={handleChange(name)}
+            onChange={onMinSliderChange}
             style={{ flex: 1 }}
           />
           <input
             readOnly
             className="input sm light px-2"
-            value={value}
+            value={minVal}
             style={{ width: 34, textAlign: "center" }}
           />
         </div>
-        {/* {!readOnly && isFieldEmpty(name) && (
-          <div style={{ color: "red", fontSize: 11, marginTop: 1, textAlign: "center" }}>
-            Required
-          </div>
-        )} */}
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <span style={{ fontSize: 10, color: "#888", fontWeight: 600, minWidth: 24 }}>Max</span>
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={1}
+            value={maxVal}
+            disabled={readOnly}
+            onChange={onMaxSliderChange}
+            style={{ flex: 1 }}
+          />
+          <input
+            readOnly
+            className="input sm light px-2"
+            value={maxVal}
+            style={{ width: 34, textAlign: "center" }}
+          />
+        </div>
       </div>
     );
   };
 
-  // Select Component
+  // Select Component (Range-based)
   const Sel = ({ name }) => (
     <div>
-      <select
-        className="input sm light px-2"
-        style={{ width: 72 }}
-        value={scores[name] ?? ""}
-        disabled={readOnly}
+      <RangeInput
+        value={scores[name]}
         onChange={handleChange(name)}
-      >
-        <option value="">Select</option>
-        {CF_OPTS.map((v) => (
-          <option key={v} value={v}>
-            {v}
-          </option>
-        ))}
-      </select>
-      {/* {!readOnly && isFieldEmpty(name) && (
-        <div style={{ color: "red", fontSize: 11, marginTop: 2 }}>Required</div>
-      )} */}
+        options={CF_OPTS}
+        disabled={readOnly}
+        allowNA={true}
+      />
     </div>
   );
 
@@ -198,7 +159,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Constitutional Disease Activity</td>
                     <td>
-                      <Slider name="constitutional.vas" />
+                      <RangeSlider name="constitutional.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -208,10 +169,7 @@ export default function Form7({
                     <td>Pyrexia</td>
                     <td></td>
                     <td>
-                      <Sel
-                        name="pyrexia.cf"
-                        
-                      />
+                      <Sel name="pyrexia.cf" />
                     </td>
                   </tr>
 
@@ -220,7 +178,7 @@ export default function Form7({
                     <td>Weight Loss</td>
                     <td></td>
                     <td>
-                      <Sel  name="weightLoss.cf" />
+                      <Sel name="weightLoss.cf" />
                     </td>
                   </tr>
 
@@ -229,7 +187,7 @@ export default function Form7({
                     <td>Fatigue</td>
                     <td></td>
                     <td>
-                      <Sel  name="fatigue.cf" />
+                      <Sel name="fatigue.cf" />
                     </td>
                   </tr>
 
@@ -237,7 +195,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Cutaneous Disease Activity</td>
                     <td>
-                      <Slider name="cutaneous.vas" />
+                      <RangeSlider name="cutaneous.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -247,7 +205,7 @@ export default function Form7({
                     <td>Cutaneous Ulceration</td>
                     <td></td>
                     <td>
-                      <Sel  name="cutaneousUlceration.cf" />
+                      <Sel name="cutaneousUlceration.cf" />
                     </td>
                   </tr>
 
@@ -256,7 +214,7 @@ export default function Form7({
                     <td>Erythroderma</td>
                     <td></td>
                     <td>
-                      <Sel  name="erythroderma.cf" />
+                      <Sel name="erythroderma.cf" />
                     </td>
                   </tr>
 
@@ -265,7 +223,7 @@ export default function Form7({
                     <td>Panniculitis</td>
                     <td></td>
                     <td>
-                      <Sel  name="panniculitis.cf" />
+                      <Sel name="panniculitis.cf" />
                     </td>
                   </tr>
 
@@ -288,7 +246,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel  name="erythemaWithSec.cf" />
+                      <Sel name="erythemaWithSec.cf" />
                     </td>
                   </tr>
 
@@ -299,7 +257,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel  name="erythemaNoSec.cf" />
+                      <Sel name="erythemaNoSec.cf" />
                     </td>
                   </tr>
 
@@ -308,7 +266,7 @@ export default function Form7({
                     <td>Heliotrope rash</td>
                     <td></td>
                     <td>
-                      <Sel  name="heliotrope.cf" />
+                      <Sel name="heliotrope.cf" />
                     </td>
                   </tr>
 
@@ -317,7 +275,7 @@ export default function Form7({
                     <td>Gottron's papules/sign</td>
                     <td></td>
                     <td>
-                      <Sel  name="gottrons.cf" />
+                      <Sel name="gottrons.cf" />
                     </td>
                   </tr>
 
@@ -326,7 +284,7 @@ export default function Form7({
                     <td>Periungual capillary changes</td>
                     <td></td>
                     <td>
-                      <Sel  name="periungualCap.cf" />
+                      <Sel name="periungualCap.cf" />
                     </td>
                   </tr>
 
@@ -342,7 +300,7 @@ export default function Form7({
                     <td className="sub-heading">A. Diffuse hair Loss</td>
                     <td></td>
                     <td>
-                      <Sel  name="diffuseHair.cf" />
+                      <Sel name="diffuseHair.cf" />
                     </td>
                   </tr>
 
@@ -353,7 +311,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel  name="patchyHair.cf" />
+                      <Sel name="patchyHair.cf" />
                     </td>
                   </tr>
 
@@ -362,7 +320,7 @@ export default function Form7({
                     <td>Mechanics Hand</td>
                     <td></td>
                     <td>
-                      <Sel  name="mechanicsHand.cf" />
+                      <Sel name="mechanicsHand.cf" />
                     </td>
                   </tr>
 
@@ -370,7 +328,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Skeletal Disease Activity</td>
                     <td>
-                      <Slider name="skeletal.vas" />
+                      <RangeSlider name="skeletal.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -404,7 +362,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel  name="moderateArth.cf" />
+                      <Sel name="moderateArth.cf" />
                     </td>
                   </tr>
 
@@ -413,7 +371,7 @@ export default function Form7({
                     <td className="sub-heading">C. Mild arthritis</td>
                     <td></td>
                     <td>
-                      <Sel  name="mildArth.cf" />
+                      <Sel name="mildArth.cf" />
                     </td>
                   </tr>
 
@@ -422,7 +380,7 @@ export default function Form7({
                     <td>Arthralgia</td>
                     <td></td>
                     <td>
-                      <Sel  name="arthralgia.cf" />
+                      <Sel name="arthralgia.cf" />
                     </td>
                   </tr>
 
@@ -431,7 +389,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>GI Disease Activity</td>
                     <td>
-                      <Slider name="gi.vas" />
+                      <RangeSlider name="gi.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -454,7 +412,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel  name="dysphagiaSevere.cf" />
+                      <Sel name="dysphagiaSevere.cf" />
                     </td>
                   </tr>
 
@@ -463,7 +421,7 @@ export default function Form7({
                     <td className="sub-heading">B. Mild dysphagia</td>
                     <td></td>
                     <td>
-                      <Sel  name="dysphagiaMild.cf" />
+                      <Sel name="dysphagiaMild.cf" />
                     </td>
                   </tr>
 
@@ -501,7 +459,7 @@ export default function Form7({
                     <td className="sub-heading">C. Mild</td>
                     <td></td>
                     <td>
-                      <Sel  name="abdPainMild.cf" />
+                      <Sel name="abdPainMild.cf" />
                     </td>
                   </tr>
 
@@ -510,7 +468,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Pulmonary Disease Activity</td>
                     <td>
-                      <Slider name="pulmonary.vas" />
+                      <RangeSlider name="pulmonary.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -531,7 +489,7 @@ export default function Form7({
                     <td className="sub-heading">A. Dyspnea at rest</td>
                     <td></td>
                     <td>
-                      <Sel  name="dyspneaRest.cf" />
+                      <Sel name="dyspneaRest.cf" />
                     </td>
                   </tr>
 
@@ -540,7 +498,7 @@ export default function Form7({
                     <td className="sub-heading">B. Dyspnea on exertion</td>
                     <td></td>
                     <td>
-                      <Sel  name="dyspneaExert.cf" />
+                      <Sel name="dyspneaExert.cf" />
                     </td>
                   </tr>
 
@@ -562,7 +520,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dyspneaILD.cf" />
+                      <Sel name="dyspneaILD.cf" />
                     </td>
                   </tr>
 
@@ -574,7 +532,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="parenchymal.cf" />
+                      <Sel name="parenchymal.cf" />
                     </td>
                   </tr>
 
@@ -586,7 +544,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="pft.cf" />
+                      <Sel name="pft.cf" />
                     </td>
                   </tr>
 
@@ -606,7 +564,7 @@ export default function Form7({
                     <td className="sub-heading">A. Moderate to severe</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dysphoniaSevere.cf" />
+                      <Sel name="dysphoniaSevere.cf" />
                     </td>
                   </tr>
 
@@ -615,7 +573,7 @@ export default function Form7({
                     <td className="sub-heading">B. Mild</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="dysphoniaMild.cf" />
+                      <Sel name="dysphoniaMild.cf" />
                     </td>
                   </tr>
 
@@ -624,7 +582,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Cardiovascular Disease Activity</td>
                     <td>
-                      <Slider name="cardio.vas" />
+                      <RangeSlider name="cardio.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -634,7 +592,7 @@ export default function Form7({
                     <td>Pericarditis</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="pericarditis.cf" />
+                      <Sel name="pericarditis.cf" />
                     </td>
                   </tr>
 
@@ -643,7 +601,7 @@ export default function Form7({
                     <td>Myocarditis</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="myocarditis.cf" />
+                      <Sel name="myocarditis.cf" />
                     </td>
                   </tr>
 
@@ -663,7 +621,7 @@ export default function Form7({
                     <td className="sub-heading">A. Severe arrhythmia</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="arrhythmiaSevere.cf" />
+                      <Sel name="arrhythmiaSevere.cf" />
                     </td>
                   </tr>
 
@@ -674,7 +632,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="arrhythmiaOther.cf" />
+                      <Sel name="arrhythmiaOther.cf" />
                     </td>
                   </tr>
 
@@ -683,7 +641,7 @@ export default function Form7({
                     <td>Sinus Tachycardia</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="sinusTachy.cf" />
+                      <Sel name="sinusTachy.cf" />
                     </td>
                   </tr>
 
@@ -698,16 +656,15 @@ export default function Form7({
                         className="input sm light input sm light-sm"
                         placeholder="Specify___"
                         value={scores["oda.specify"] || ""}
-                        //onChange={(e) => setScores((p) => ({ ...p, ["oda.specify"]: e.target.value }))}
-                        onChange={(e) =>onChange({ ...scores,["oda.specify"]: e.target.value, })}
+                        onChange={handleTextChange("oda.specify")}
                         disabled={readOnly}
                       />
                     </td>
                     <td>
-                      <Slider name="oda.vas" />
+                      <RangeSlider name="oda.vas" />
                     </td>
                     <td>
-                      <Sel opts={CF_OPTS} name="oda.cf" />
+                      <Sel name="oda.cf" />
                     </td>
                   </tr>
 
@@ -715,7 +672,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Extra Muscular Global Assessment</td>
                     <td>
-                      <Slider name="extraMuscular.vas" />
+                      <RangeSlider name="extraMuscular.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -724,7 +681,7 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Muscle Disease Activity</td>
                     <td>
-                      <Slider name="muscle.vas" />
+                      <RangeSlider name="muscle.vas" />
                     </td>
                     <td></td>
                   </tr>
@@ -747,7 +704,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="myositisSevere.cf" />
+                      <Sel name="myositisSevere.cf" />
                     </td>
                   </tr>
 
@@ -758,7 +715,7 @@ export default function Form7({
                     </td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="myositisModerate.cf" />
+                      <Sel name="myositisModerate.cf" />
                     </td>
                   </tr>
 
@@ -767,7 +724,7 @@ export default function Form7({
                     <td className="sub-heading">C. Mild muscle inflammation</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="myositisMild.cf" />
+                      <Sel name="myositisMild.cf" />
                     </td>
                   </tr>
 
@@ -776,7 +733,7 @@ export default function Form7({
                     <td>Myalgia</td>
                     <td></td>
                     <td>
-                      <Sel opts={CF_OPTS} name="myalgia.cf" />
+                      <Sel name="myalgia.cf" />
                     </td>
                   </tr>
 
@@ -784,17 +741,12 @@ export default function Form7({
                     <td className="fixed-id"></td>
                     <td>Global Disease Activity</td>
                     <td>
-                      <Slider name="global.vas" />
+                      <RangeSlider name="global.vas" />
                     </td>
                     <td></td>
                   </tr>
                 </tbody>
 
-
-
-            
-                  {/* Continue adding remaining fields similarly */}
-                
               </table>
             </div>
           </div>
@@ -803,209 +755,3 @@ export default function Form7({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { useCallback } from "react";
-
-// export default function Form7({
-//   visit = "initial",
-//   readOnly = false,
-//   formData = {},
-//   setFormData,
-// }) {
-
-
-
-//   const handleChange = useCallback((name, value) => {
-//   setFormData((prev) => {
-//     const keys = name.split(".");
-//     const newData = { ...prev };
-
-//     let current = newData;
-//     for (let i = 0; i < keys.length - 1; i++) {
-//       current[keys[i]] = current[keys[i]] || {};
-//       current = current[keys[i]];
-//     }
-
-//     current[keys[keys.length - 1]] =
-//       value === "NA" ? "NA" : value === "" ? "" : Number(value);
-
-//     return newData;
-//   });
-// }, [setFormData]);
-
-
-//   const CF_OPTS = [0, 1, 2, 3, 4, "NA"];
-
-
-//   const Sel = ({ name }) => (
-//     <select
-//       className="input sm light px-2"
-//       style={{ width: 72 }}
-//       value={formData[name] ?? ""}
-//       disabled={readOnly}
-//       onChange={(e) => handleChange(name, e.target.value)}
-//     >
-//       <option value="">Select</option>
-//       {CF_OPTS.map((o) => (
-//         <option key={o} value={o}>
-//           {o}
-//         </option>
-//       ))}
-//     </select>
-//   );
-
- 
-//   const Slider = ({ name }) => {
-//     const value = formData[name] ?? 0;
- 
-
-//     return (
-//       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-//         <input
-//           type="range"
-//           min={0}
-//           max={10}
-//           step={1}
-//           value={value}
-//           disabled={readOnly}
-//           onChange={(e) => handleChange(name, e.target.value)}
-//           style={{ flex: 1 }}
-//         />
-
-//         <input
-//           readOnly
-//           className="input sm light px-2"
-//           value={value}
-//           style={{ width: 35, textAlign: "center" }}
-//         />
-//       </div>
-//     );
-//   };
-
-//   const isInitial = visit === "initial";
-
-//   return (
-//     <div className="form-section-wrap panel panel-default mt-4">
-//       <div className="panel-heading">
-//         <strong>Form MDAAT</strong>
-//       </div>
-
-//       <div className="panel-body mt-3 text-center">
-//         {isInitial ? (
-//           <h5>Case Presentation: Initial</h5>
-//         ) : (
-//           <h5>Case Presentation: Follow up</h5>
-//         )}
-
-//         <hr />
-
-//         <h5>Myositis Disease Activity Assessment Tool (MDAAT)</h5>
-
-
-//         <table className="table theme-table bdr mt-3">
-//           <thead>
-//             <tr>
-//               <th>S/N</th>
-//               <th>Disease Activity</th>
-//               <th>Overall Organ Disease Activity (0-10 cm) VAS</th>
-//               <th>Clinical Features (0,1,2,3,4, NA: Not Assessed)</th>
-//             </tr>
-//           </thead>
-
-//           <tbody>
-
-//             {/* Constitutional */}
-//             <tr>
-//               <td></td>
-//               <td>Constitutional Disease Activity</td>
-//               <td>
-//                 <Slider name="constitutional.vas" />
-//               </td>
-//               <td></td>
-//             </tr>
-
-//             <tr>
-//               <td>1</td>
-//               <td>Pyrexia</td>
-//               <td></td>
-//               <td>
-//                 <Sel name="pyrexia.cf" />
-//               </td>
-//             </tr>
-
-//             <tr>
-//               <td>2</td>
-//               <td>Weight Loss</td>
-//               <td></td>
-//               <td>
-//                 <Sel name="weightLoss.cf" />
-//               </td>
-//             </tr>
-
-//             {/* Cutaneous */}
-//             <tr>
-//               <td></td>
-//               <td>Cutaneous Disease Activity</td>
-//               <td>
-//                 <Slider name="cutaneous.vas" />
-//               </td>
-//               <td></td>
-//             </tr>
-
-//             <tr>
-//               <td>4</td>
-//               <td>Cutaneous Ulceration</td>
-//               <td></td>
-//               <td>
-//                 <Sel name="cutaneousUlceration.cf" />
-//               </td>
-//             </tr>
-
-
-
-           
-//           </tbody>
-//         </table>
-
-//       </div>
-//     </div>
-//   );
-// }

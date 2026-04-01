@@ -1,4 +1,5 @@
 import React from "react";
+import RangeInput from "./RangeInput";
 
 export default function Form6({
   visit = "initial",
@@ -8,8 +9,8 @@ export default function Form6({
 }) {
   const HAIRLOSS_OPTS = [0, 1];
 
-  const handleChange = (e) => {
-    const updated = { hairLoss: e.target.value };
+  const handleChange = (newValue) => {
+    const updated = { hairLoss: newValue };
     onChange(updated);
   };
 
@@ -51,22 +52,14 @@ export default function Form6({
                     0 - absent <br /> 1 - present
                   </td>
 
-                  {/* selectable score 0‑1 */}
+                  {/* selectable score (Range) */}
                   <td style={{ padding: "12px" }}>
-                    <select
-                      className="input sm light px-2"
-                      style={{ width: "72px" }}
-                      value={scores.hairLoss || ""}
+                    <RangeInput
+                      value={scores.hairLoss}
                       onChange={handleChange}
+                      options={HAIRLOSS_OPTS}
                       disabled={readOnly}
-                    >
-                      <option value="">Select</option>
-                      {HAIRLOSS_OPTS.map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </td>
                 </tr>
               </tbody>

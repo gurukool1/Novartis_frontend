@@ -1,4 +1,6 @@
 import React from "react";
+import RangeInput from "./RangeInput";
+import { computeRangeTotal } from "./rangeUtils";
 
 export default function Form3({
   visit = "initial",
@@ -7,7 +9,6 @@ export default function Form3({
   onChange
 }) {
   const AREAS = [
-
     "Scalp",
     "Malar Area",
     "Periorbital",      
@@ -15,11 +16,9 @@ export default function Form3({
     "V‑area Neck (Frontal)",
     "Posterior Neck",
     "Upper Back & Shoulders",
-
     "Rest of Back & Buttocks",
     "Abdomen",
     "Lateral Upper Thigh",
-
     "Rest of Leg and feet",
     "Arm",
     "Mechanic's Hand",
@@ -29,18 +28,15 @@ export default function Form3({
   const POIKILO_OPTS = [0, 1, 2];
   const CALCINOSIS_OPTS = [0, 1];
 
-  const handleChange = (area, field) => (e) => {
+  const handleChange = (area, field) => (newValue) => {
     const updated = {
       ...scores,
-      [`${area}.${field}`]: e.target.value
+      [`${area}.${field}`]: newValue
     };
     onChange(updated);
   };
 
-  const total = Object.values(scores)
-    .filter((v) => v !== "" && v !== "NA")
-    .map(Number)
-    .reduce((a, b) => a + b, 0);
+  const total = computeRangeTotal(scores);
 
   const isInitial = visit === "initial";
 
@@ -83,32 +79,20 @@ export default function Form3({
                     <tr key={i}>
                       <td>{area}</td>
                       <td>
-                        <select
-                          className="input sm light px-2"
-                          style={{ width: "72px" }}
-                          value={scores[`${area}.poikilo`] ?? ""}
+                        <RangeInput
+                          value={scores[`${area}.poikilo`]}
                           onChange={handleChange(area, "poikilo")}
+                          options={POIKILO_OPTS}
                           disabled={readOnly}
-                        >
-                          <option value="">Select</option>
-                          {POIKILO_OPTS.map((v) => (
-                            <option key={v} value={v}>{v}</option>
-                          ))}
-                        </select>
+                        />
                       </td>
                       <td>
-                        <select
-                          className="input sm light px-2"
-                          style={{ width: "72px" }}
-                          value={scores[`${area}.calcinosis`] ?? ""}
+                        <RangeInput
+                          value={scores[`${area}.calcinosis`]}
                           onChange={handleChange(area, "calcinosis")}
+                          options={CALCINOSIS_OPTS}
                           disabled={readOnly}
-                        >
-                          <option value="">Select</option>
-                          {CALCINOSIS_OPTS.map((v) => (
-                            <option key={v} value={v}>{v}</option>
-                          ))}
-                        </select>
+                        />
                       </td>
                     </tr>
                   ))}

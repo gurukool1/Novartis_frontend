@@ -24,8 +24,8 @@ import Form9 from "../Caseformparts.jsx/form9";
 import DiscrepancyContext from "./DiscrepancyContext";
 
 // ─── Status sets ──────────────────────────────────────────────────────────────
-// Both MISMATCH and RANGED_MISMATCH are treated as "bad" (red)
-const MISMATCH_STATUSES = new Set(["MISMATCH", "RANGED_MISMATCH"]);
+// Both MISMATCH and RANGED_MISMATCH and OUT_OF_RANGE are treated as "bad" (red)
+const MISMATCH_STATUSES = new Set(["MISMATCH", "RANGED_MISMATCH", "OUT_OF_RANGE"]);
 
 // ─── Maps each form component to its backend section key(s) ──────────────────
 const FORM_SECTION_MAP = {
@@ -141,9 +141,10 @@ const AccuracyRing = ({ percent }) => {
 const StatusBadge = ({ status }) => {
   const isMismatch = MISMATCH_STATUSES.has(status);
   const friendlyLabel =
-    status === "RANGED_MISMATCH" ? "Out of Range"
-      : status === "MISMATCH" ? "Mismatch"
-        : "Matched";
+    status === "OUT_OF_RANGE" ? "Out of Range"
+      : status === "RANGED_MISMATCH" ? "Out of Range"
+        : status === "MISMATCH" ? "Mismatch"
+          : "Matched";
 
   return (
     <span style={{
@@ -205,7 +206,7 @@ const GlobalSummaryTable = ({ discrepancies }) => {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ background: "#f8fafc" }}>
-              {["#", "Section", "Field", "Your Answer", "Expected Answer", "Deviation", "Status"].map((h) => (
+              {["#", "Section", "Field", "Your Answer", "Expected", "Deviation", "Status"].map((h) => (
                 <th key={h} style={{
                   padding: "8px 12px", textAlign: "left",
                   color: "#475569", fontWeight: 700,
@@ -238,8 +239,20 @@ const GlobalSummaryTable = ({ discrepancies }) => {
                       ? String(d.actualValue)
                       : <span style={{ color: "#9ca3af", fontStyle: "italic" }}>not submitted</span>}
                   </td>
+                  {/* <td style={{ padding: "7px 12px", color: "#374151", fontWeight: 600 }}>
+                    {d.expectedValue
+                      ? `${d.expectedValue.min} – ${d.expectedValue.max}`
+                      : d.expectedValue != null ? String(d.expectedValue) : "—"}
+                  </td> */}
                   <td style={{ padding: "7px 12px", color: "#374151", fontWeight: 600 }}>
-                    {d.expectedValue != null ? String(d.expectedValue) : "—"}
+                    {(() => {
+                      if (d.expectedValue === "NA") return "NA";
+                      if (d.expectedValue && typeof d.expectedValue === "object") {
+                        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
+                        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+                      }
+                      return d.expectedValue != null ? String(d.expectedValue) : "—";
+                    })()}
                   </td>
                   <td style={{
                     padding: "7px 12px", fontWeight: 700,
@@ -272,9 +285,9 @@ const GlobalSummaryTable = ({ discrepancies }) => {
         <span style={{ fontSize: 11, color: "#b91c1c", fontWeight: 600 }}>
           🔴 Mismatches: <strong>{totalMismatches}</strong>
         </span>
-        <span style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>
+        {/* <span style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>
           🟢 Matched: <strong>{totalMatched}</strong>
-        </span>
+        </span> */}
       </div>
     </div>
   );
@@ -297,7 +310,7 @@ const FieldComparisonTable = ({ sectionKeys, discrepancyMap }) => {
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 3px", fontSize: 12 }}>
           <thead>
             <tr>
-              {["Field", "Your Answer", "Expected Answer", "Deviation", "Status"].map((h) => (
+              {["Field", "Your Answer", "Expected", "Deviation", "Status"].map((h) => (
                 <th key={h} style={{
                   padding: "4px 10px", textAlign: "left",
                   color: "#6b7280", fontWeight: 700,
@@ -328,8 +341,20 @@ const FieldComparisonTable = ({ sectionKeys, discrepancyMap }) => {
                       ? String(d.actualValue)
                       : <span style={{ color: "#9ca3af", fontStyle: "italic" }}>not submitted</span>}
                   </td>
+                  {/* <td style={{ padding: "6px 10px", background: rowBg, color: "#374151", fontWeight: 600 }}>
+                    {d.expectedValue
+                      ? `${d.expectedValue.min} – ${d.expectedValue.max}`
+                      : d.expectedValue != null ? String(d.expectedValue) : "—"}
+                  </td> */}
                   <td style={{ padding: "6px 10px", background: rowBg, color: "#374151", fontWeight: 600 }}>
-                    {d.expectedValue != null ? String(d.expectedValue) : "—"}
+                    {(() => {
+                      if (d.expectedValue === "NA") return "NA";
+                      if (d.expectedValue && typeof d.expectedValue === "object") {
+                        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
+                        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+                      }
+                      return d.expectedValue != null ? String(d.expectedValue) : "—";
+                    })()}
                   </td>
                   <td style={{
                     padding: "6px 10px", background: rowBg, fontWeight: 700,
@@ -539,8 +564,8 @@ const AnswerSheetComparison = () => {
           <div className="d-flex flex-wrap gap-3 flex-grow-1">
             {[
               { label: "Total Fields", value: stats.totalFields ?? 0, color: "#6366f1" },
-              { label: "Exact Matches", value: stats.exactMatches ?? 0, color: "#10b981" },
-              { label: "Ranged Match", value: stats.rangedMatch ?? stats.withinRange ?? 0, color: "#3b82f6" },
+              // { label: "Exact Matches", value: stats.exactMatches ?? 0, color: "#10b981" },
+              { label: "Ranged Match", value: stats.rangedMatch ?? stats.withinRange ?? 0, color: "#10b981" },
               { label: "Mismatched", value: stats.mismatchedFields ?? 0, color: "#ef4444" },
               // { label: "Ignored", value: stats.ignored ?? 0, color: "#9ca3af" },
             ].map(({ label, value, color }) => (
@@ -562,7 +587,7 @@ const AnswerSheetComparison = () => {
             🔍 Border Legend:
           </span>
           {[
-            { color: "#10b981", bg: "#ecfdf5", label: "Green border", desc: "Field matched (exact or within range)" },
+            { color: "#10b981", bg: "#ecfdf5", label: "Green border", desc: "Field matched (within range)" },
             { color: "#ef4444", bg: "#fff1f2", label: "Red border", desc: "Mismatch or out-of-range value" },
             // { color: "#d1d5db", bg: "#f9fafb", label: "Grey border (section)", desc: "No evaluation data for this section" },
           ].map(({ color, bg, label, desc }) => (
@@ -584,8 +609,8 @@ const AnswerSheetComparison = () => {
             </div>
             <div className="d-flex gap-2 flex-wrap">
               <StatusBadge status="MISMATCH" />
-              <StatusBadge status="RANGED_MISMATCH" />
-              <StatusBadge status="EXACT_MATCH" />
+              <StatusBadge status="OUT_OF_RANGE" />
+              {/* <StatusBadge status="EXACT_MATCH" /> */}
             </div>
           </div>
         </div>

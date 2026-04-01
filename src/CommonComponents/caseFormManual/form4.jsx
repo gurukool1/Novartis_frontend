@@ -1,4 +1,6 @@
 import React from "react";
+import RangeInput from "./RangeInput";
+import { isRangeValue } from "./rangeUtils";
 
 export default function Form4({
   visit = "initial",
@@ -9,25 +11,48 @@ export default function Form4({
   const SCORE_OPTS = [0, 1, 2, 3];
   const ULCER_OPTS = [0, 1];
   const DAMAGE_OPTS = [0, 1, 2];
-  const YESNO_OPTS = ["yes", "no"];
 
-  const handleChange = (field) => (e) => {
+  const handleChange = (field) => (newValue) => {
     const updated = {
       ...scores,
-      [field]: e.target.value
+      [field]: newValue
     };
     onChange(updated);
   };
 
+  // Compute doubled value from score range
+  const getScoreAvg = () => {
+    const val = scores.score;
+    if (!val || val === "" || val === "NA") return "";
+    if (isRangeValue(val)) {
+      const min = Number(val.min) || 0;
+      const max = Number(val.max) || 0;
+      return (min + max) / 2;
+    }
+    return Number(val);
+  };
+
+  const scoreAvg = getScoreAvg();
+  const papuleVal = scores.papule;
   const doubledValue =
-    scores.papule === "yes" && scores.score !== "" && scores.score != null
-      ? Number(scores.score) * 2
+    papuleVal === "yes" && scoreAvg !== ""
+      ? Math.round(scoreAvg * 2 * 100) / 100
       : "";
 
-  const total =
-    (doubledValue === "" ? 0 : Number(doubledValue)) +
-    (scores.ulcer === "" ? 0 : Number(scores.ulcer)) +
-    (scores.damage === "" ? 0 : Number(scores.damage));
+  const getNumericAvg = (field) => {
+    const val = scores[field];
+    if (!val || val === "" || val === "NA") return 0;
+    if (isRangeValue(val)) {
+      return ((Number(val.min) || 0) + (Number(val.max) || 0)) / 2;
+    }
+    return Number(val);
+  };
+
+  const total = Math.round(
+    ((doubledValue === "" ? 0 : Number(doubledValue)) +
+      getNumericAvg("ulcer") +
+      getNumericAvg("damage")) * 100
+  ) / 100;
 
   const isInitial = visit === "initial";
 
@@ -51,7 +76,7 @@ export default function Form4({
                         color: "#fff",
                       }}
                     >
-                      Gottron’s – Hands
+                      Gottron's – Hands
                     </th>
                   </tr>
                   <tr>
@@ -64,7 +89,7 @@ export default function Form4({
                         fontSize: "16px",
                       }}
                     >
-                      Examine the patient’s hands and double score if papules are
+                      Examine the patient's hands and double score if papules are
                       present
                     </th>
                     <th
@@ -86,7 +111,7 @@ export default function Form4({
                         fontSize: "16px",
                       }}
                     >
-                      Examine patient’s hands and score if damage is present
+                      Examine patient's hands and score if damage is present
                     </th>
                   </tr>
                 </thead>
@@ -100,26 +125,20 @@ export default function Form4({
                         fontWeight: "bold",
                       }}
                     >
-                      0 - absent <br />
-                      1 - pink; faint erythema <br />
-                      2 - red erythema <br />
-                      3 - dark red
+                      0 - absent <br />
+                      1 - pink; faint erythema <br />
+                      2 - red erythema <br />
+                      3 - dark red
                     </td>
 
-                    {/* Score 0-3 */}
+                    {/* Score 0-3 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
-                      <select
-                        className="input sm light px-2"
-                        style={{ width: 72 }}
-                        value={scores.score || ""}
+                      <RangeInput
+                        value={scores.score}
                         onChange={handleChange("score")}
+                        options={SCORE_OPTS}
                         disabled={readOnly}
-                      >
-                        <option value="">Select</option>
-                        {SCORE_OPTS.map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
+                      />
 
                       <div style={{ marginTop: 8, fontSize: 12 }}>
                         Doubled Score (Read only)
@@ -132,20 +151,14 @@ export default function Form4({
                       />
                     </td>
 
-                    {/* Ulcer 0-1 */}
+                    {/* Ulcer 0-1 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
-                      <select
-                        className="input sm light px-2"
-                        style={{ width: 72 }}
-                        value={scores.ulcer || ""}
+                      <RangeInput
+                        value={scores.ulcer}
                         onChange={handleChange("ulcer")}
+                        options={ULCER_OPTS}
                         disabled={readOnly}
-                      >
-                        <option value="">Select</option>
-                        {ULCER_OPTS.map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
+                      />
                     </td>
 
                     <td
@@ -156,29 +169,23 @@ export default function Form4({
                         fontWeight: "bold",
                       }}
                     >
-                      0 - absent <br />
-                      1 - dyspigmentation <br />
-                      2 - scarring
+                      0 - absent <br />
+                      1 - dyspigmentation <br />
+                      2 - scarring
                     </td>
 
-                    {/* Damage 0-2 */}
+                    {/* Damage 0-2 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
-                      <select
-                        className="input sm light px-2"
-                        style={{ width: 72 }}
-                        value={scores.damage || ""}
+                      <RangeInput
+                        value={scores.damage}
                         onChange={handleChange("damage")}
+                        options={DAMAGE_OPTS}
                         disabled={readOnly}
-                      >
-                        <option value="">Select</option>
-                        {DAMAGE_OPTS.map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
+                      />
                     </td>
                   </tr>
 
-                  {/* Papule Present Row */}
+                  {/* Papule Present Row — NON-NUMERIC (yes/no) */}
                   <tr style={{ textAlign: "center" }}>
                     <td
                       className="alltext"
@@ -189,22 +196,17 @@ export default function Form4({
                         fontSize: 14,
                       }}
                     >
-                      Papule Present
+                      Papule Present
                     </td>
 
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
-                      <select
-                        className="input sm light px-2"
-                        style={{ width: 72 }}
-                        value={scores.papule || ""}
+                      <RangeInput
+                        value={scores.papule}
                         onChange={handleChange("papule")}
+                        isNonNumeric={true}
+                        nonNumericOpts={["yes", "no"]}
                         disabled={readOnly}
-                      >
-                        <option value="">Select</option>
-                        {YESNO_OPTS.map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
+                      />
                     </td>
 
                     <td colSpan={3} style={{ border: "0.0625rem solid #939393", backgroundColor: "#939393" }} />

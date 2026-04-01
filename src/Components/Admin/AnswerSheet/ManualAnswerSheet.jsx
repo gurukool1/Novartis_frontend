@@ -5,6 +5,7 @@ import { submitAnswerSheet, getAnswerSheet, updateMasterSheet, deleteAnswerSheet
 import { getAllCases } from '../../../Redux/Actions/CaseAction';
 import { setAlert } from '../../../Redux/Actions/AlertActions';
 import CommonAlert from '../../../CommonComponents/CommonAlert';
+import { normalizeScoresToRange, validateRangeScores, isRangeValue } from '../../../CommonComponents/caseFormManual/rangeUtils';
 import Form1 from "../../../CommonComponents/caseFormManual/form1";
 import Form2 from "../../../CommonComponents/caseFormManual/form2";
 import Form3 from "../../../CommonComponents/caseFormManual/form3";
@@ -40,8 +41,24 @@ const ManualAnswerSheet = () => {
     dispatch(getAnswerSheet(selectedCaseId, setLoading)).then(result => {
       if (result?.success && result?.data) {
         console.log("Fetched answer sheet data:", result.data);
-        setAnswerData(result.data);
-      
+        // Normalize legacy single-value data to range format
+        const normalized = { ...result.data };
+        const formKeys = [
+          'MMT_8_initial', 'MMT_8_followUp',
+          'CDASI_Activity_initial', 'CDASI_Activity_followUp',
+          'CDASI_Damage_initial', 'CDASI_Damage_followUp',
+          'Gottron_Hands_initial', 'Gottron_Hands_followUp',
+          'Periungual_initial', 'Periungual_followUp',
+          'Alopecia_initial', 'Alopecia_followUp',
+          'MDAAT_initial', 'MDAAT_followUp',
+          'Physician_initial', 'Physician_followUp',
+        ];
+        formKeys.forEach(key => {
+          if (normalized[key] && typeof normalized[key] === 'object') {
+            normalized[key] = normalizeScoresToRange(normalized[key]);
+          }
+        });
+        setAnswerData(normalized);
       } else {
         setAnswerData({});
           dispatch(setAlert('Fill the AnswerSheet', 'warning'));
@@ -138,15 +155,50 @@ const ManualAnswerSheet = () => {
 
     const isEditMode = Boolean(answerData?.id);
 
-    const firstEmptyField = Array.from(
-      document.querySelectorAll('.manual-answer-sheet select:not([disabled])')
-    ).find((select) => !select.value || select.value === '');
+    // Validate range data (min <= max, no partial ranges)
+    const formKeys = [
+      'MMT_8_initial', 'MMT_8_followUp',
+      'CDASI_Activity_initial', 'CDASI_Activity_followUp',
+      'CDASI_Damage_initial', 'CDASI_Damage_followUp',
+      'Gottron_Hands_initial', 'Gottron_Hands_followUp',
+      'Periungual_initial', 'Periungual_followUp',
+      'Alopecia_initial', 'Alopecia_followUp',
+      'MDAAT_initial', 'MDAAT_followUp',
+      'Physician_initial', 'Physician_followUp',
+    ];
 
-    if (firstEmptyField) {
-      firstEmptyField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => firstEmptyField.focus(), 300);
-      dispatch(setAlert('Please fill all required fields', 'warning'));
-      return;
+    let allErrors = [];
+    formKeys.forEach(key => {
+      if (answerData[key] && typeof answerData[key] === 'object') {
+        const errors = validateRangeScores(answerData[key]);
+        allErrors = allErrors.concat(errors.map(e => `${key}: ${e}`));
+      }
+    });
+
+    // ─── VALIDATION: ONLY RUN ON NEW SUBMISSION ───
+    if (!isEditMode) {
+      // if (allErrors.length > 0) {
+      //   dispatch(setAlert(`Range validation errors: ${allErrors[0]}`, 'warning'));
+      //   return;
+      // }
+
+      // Check empty range inputs and selects
+      const firstEmptyField = Array.from(
+        document.querySelectorAll('.manual-answer-sheet input[type="number"]:not([disabled])')
+      ).find((input) => input.value === '');
+
+      const firstEmptySelect = Array.from(
+        document.querySelectorAll('.manual-answer-sheet select:not([disabled])')
+      ).find((select) => !select.value || select.value === '');
+
+      const emptyElement = firstEmptyField || firstEmptySelect;
+
+      if (emptyElement) {
+        emptyElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => emptyElement.focus(), 300);
+        dispatch(setAlert('Please fill all required fields before submitting.', 'warning'));
+        return;
+      }
     }
 
     const payload = {

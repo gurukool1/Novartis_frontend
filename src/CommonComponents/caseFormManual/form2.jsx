@@ -1,4 +1,6 @@
 import React from "react";
+import RangeInput from "./RangeInput";
+import { isRangeValue, computeRangeTotal } from "./rangeUtils";
 
 export default function Form2({
   visit = "initial",
@@ -22,25 +24,20 @@ export default function Form2({
     "Mechanic's Hand",
     "Dorsum of Hands (Not Over Joints)",
     "Gottron's - Not on Hands",
-
-
   ];
   const ERYTHEMA_OPTS = [0, 1, 2, 3];
   const SCALE_OPTS = [0, 1, 2];
   const EROSION_OPTS = [0, 1];
 
-  const handleChange = (loc, field) => (e) => {
+  const handleChange = (loc, field) => (newValue) => {
     const updated = {
       ...scores,
-      [`${loc}.${field}`]: e.target.value
+      [`${loc}.${field}`]: newValue
     };
     onChange(updated);
   };
 
-  const total = Object.values(scores)
-    .filter((v) => v !== "" && v !== "NA")
-    .map(Number)
-    .reduce((a, b) => a + b, 0);
+  const total = computeRangeTotal(scores);
 
   const isInitial = visit === "initial";
 
@@ -101,46 +98,28 @@ export default function Form2({
                     <tr key={i}>
                       <td>{loc}</td>
                       <td>
-                        <select
-                          className="input sm light px-2"
-                          style={{ width: "72px" }}
-                          value={scores[`${loc}.erythema`] ?? ""}
+                        <RangeInput
+                          value={scores[`${loc}.erythema`]}
                           onChange={handleChange(loc, "erythema")}
+                          options={ERYTHEMA_OPTS}
                           disabled={readOnly}
-                        >
-                          <option value="">Select</option>
-                          {ERYTHEMA_OPTS.map((v) => (
-                            <option key={v} value={v}>{v}</option>
-                          ))}
-                        </select>
+                        />
                       </td>
                       <td>
-                        <select
-                          className="input sm light px-2"
-                          style={{ width: "72px" }}
-                          value={scores[`${loc}.scale`] ?? ""}
+                        <RangeInput
+                          value={scores[`${loc}.scale`]}
                           onChange={handleChange(loc, "scale")}
+                          options={SCALE_OPTS}
                           disabled={readOnly}
-                        >
-                          <option value="">Select</option>
-                          {SCALE_OPTS.map((v) => (
-                            <option key={v} value={v}>{v}</option>
-                          ))}
-                        </select>
+                        />
                       </td>
                       <td>
-                        <select
-                          className="input sm light px-2"
-                          style={{ width: "72px" }}
-                          value={scores[`${loc}.erosion`] ?? ""}
+                        <RangeInput
+                          value={scores[`${loc}.erosion`]}
                           onChange={handleChange(loc, "erosion")}
+                          options={EROSION_OPTS}
                           disabled={readOnly}
-                        >
-                          <option value="">Select</option>
-                          {EROSION_OPTS.map((v) => (
-                            <option key={v} value={v}>{v}</option>
-                          ))}
-                        </select>
+                        />
                       </td>
                     </tr>
                   ))}

@@ -2,7 +2,7 @@ import { useContext } from "react";
 import DiscrepancyContext from "./DiscrepancyContext";
 
 // Statuses that cause a red border on the field input
-const MISMATCH_STATUSES = new Set(["MISMATCH", "RANGED_MISMATCH"]);
+const MISMATCH_STATUSES = new Set(["MISMATCH", "RANGED_MISMATCH", "OUT_OF_RANGE"]);
 
 export const useDiscrepancyStyles = (sectionKey) => {
   const discrepancyMap = useContext(DiscrepancyContext);

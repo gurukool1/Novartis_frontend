@@ -1,4 +1,5 @@
 import React from "react";
+import RangeInput from "./RangeInput";
 
 export default function Form5({
   visit = "initial",
@@ -8,8 +9,8 @@ export default function Form5({
 }) {
   const PERI_OPTS = [0, 1, 2];
 
-  const handleChange = (e) => {
-    const updated = { peri: e.target.value };
+  const handleChange = (newValue) => {
+    const updated = { peri: newValue };
     onChange(updated);
   };
 
@@ -47,27 +48,19 @@ export default function Form5({
                     className="alltext"
                     style={{ padding: "12px", fontWeight: "bold" }}
                   >
-                    0 - absent <br />
-                    1 - pink/red erythema / microscopic telangiectasias <br />
-                    2 - visible telangiectasias
+                    0 - absent <br />
+                    1 - pink/red erythema / microscopic telangiectasias <br />
+                    2 - visible telangiectasias
                   </td>
 
-                  {/* selectable score */}
+                  {/* selectable score (Range) */}
                   <td style={{ padding: "12px" }}>
-                    <select
-                      className="input sm light px-2"
-                      style={{ width: 72 }}
-                      value={scores.peri || ""}
+                    <RangeInput
+                      value={scores.peri}
                       onChange={handleChange}
+                      options={PERI_OPTS}
                       disabled={readOnly}
-                    >
-                      <option value="">Select</option>
-                      {PERI_OPTS.map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </td>
                 </tr>
               </tbody>
