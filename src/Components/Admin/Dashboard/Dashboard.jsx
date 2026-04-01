@@ -40,6 +40,9 @@ export const Dashboard = () => {
   };
 
   const getModuleName = (formTypeObj = {}) => {
+      if (!formTypeObj || typeof formTypeObj !== "object") {
+    return "N/A";
+  }
     const map = {
       Physician: "PhGA",
       AllForms: "All Modules",
@@ -47,7 +50,7 @@ export const Dashboard = () => {
 
     return Object.values(formTypeObj)
       .map(v => map[v] || v)
-      .join(", ");
+      .join(", ")
   };
 
 
