@@ -5,7 +5,7 @@ import { submitAnswerSheet, getAnswerSheet, updateMasterSheet, deleteAnswerSheet
 import { getAllCases } from '../../../Redux/Actions/CaseAction';
 import { setAlert } from '../../../Redux/Actions/AlertActions';
 import CommonAlert from '../../../CommonComponents/CommonAlert';
-import { normalizeScoresToRange, validateRangeScores, isRangeValue } from '../../../CommonComponents/caseFormManual/rangeUtils';
+import { normalizeScoresToRange, transformPayload, validateRequiredFields  } from '../../../CommonComponents/caseFormManual/rangeUtils';
 import Form1 from "../../../CommonComponents/caseFormManual/form1";
 import Form2 from "../../../CommonComponents/caseFormManual/form2";
 import Form3 from "../../../CommonComponents/caseFormManual/form3";
@@ -58,7 +58,11 @@ const ManualAnswerSheet = () => {
             normalized[key] = normalizeScoresToRange(normalized[key]);
           }
         });
-        setAnswerData(normalized);
+       // setAnswerData(normalized);
+        setAnswerData(prev => ({
+  ...prev,
+  ...normalized
+}));
       } else {
         setAnswerData({});
           dispatch(setAlert('Fill the AnswerSheet', 'warning'));
@@ -167,44 +171,49 @@ const ManualAnswerSheet = () => {
       'Physician_initial', 'Physician_followUp',
     ];
 
-    let allErrors = [];
-    formKeys.forEach(key => {
-      if (answerData[key] && typeof answerData[key] === 'object') {
-        const errors = validateRangeScores(answerData[key]);
-        allErrors = allErrors.concat(errors.map(e => `${key}: ${e}`));
-      }
-    });
+ 
 
-    // ─── VALIDATION: ONLY RUN ON NEW SUBMISSION ───
-    if (!isEditMode) {
-      // if (allErrors.length > 0) {
-      //   dispatch(setAlert(`Range validation errors: ${allErrors[0]}`, 'warning'));
-      //   return;
-      // }
 
-      // Check empty range inputs and selects
-      const firstEmptyField = Array.from(
-        document.querySelectorAll('.manual-answer-sheet input[type="number"]:not([disabled])')
-      ).find((input) => input.value === '');
 
-      const firstEmptySelect = Array.from(
-        document.querySelectorAll('.manual-answer-sheet select:not([disabled])')
-      ).find((select) => !select.value || select.value === '');
+if (!isEditMode) {
 
-      const emptyElement = firstEmptyField || firstEmptySelect;
+  let requiredErrors = [];
 
-      if (emptyElement) {
-        emptyElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => emptyElement.focus(), 300);
-        dispatch(setAlert('Please fill all required fields before submitting.', 'warning'));
-        return;
-      }
+  formKeys.forEach(key => {
+
+    // ❗ Missing full form
+    if (!answerData[key]) {
+      requiredErrors.push(`${key}: missing`);
+      return;
     }
+
+    if (typeof answerData[key] === 'object') {
+      const errors = validateRequiredFields(answerData[key]);
+      requiredErrors = requiredErrors.concat(errors.map(e => `${key}: ${e}`));
+    }
+  });
+
+  if (requiredErrors.length > 0) {
+    dispatch(setAlert('All fields are required', 'warning'));
+    return;
+  }
+}
+
+
+   const transformedData = {};
+
+Object.keys(answerData).forEach((key) => {
+  if (typeof answerData[key] === "object") {
+    transformedData[key] = transformPayload(answerData[key]);
+  } else {
+    transformedData[key] = answerData[key];
+  }
+});
 
     const payload = {
       caseId: selectedCaseId,
       answerType: 'manual',
-      formData: answerData,
+      formData: transformedData,
       created_by: user?.id,
     };
 

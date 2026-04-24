@@ -51,7 +51,7 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
   
   // Headers for the table
   const tableHeader = new TableRow({
-    children: ["Section", "Field", "Your Answer", "Expected", "Deviation", "Status"].map(
+    children: ["Section", "Field", "Your Answer", "Expected", "Expert#", "Deviation", "Status"].map(
       (text) =>
         new TableCell({
           children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
@@ -78,14 +78,43 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
     //   : d.expectedValue != null ? String(d.expectedValue) : "—";
 
 
+    // const expectedText = (() => {
+    //   if (d.expectedValue === "NA") return "NA";
+    //   if (d.expectedValue && typeof d.expectedValue === "object") {
+    //     if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
+    //     return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+    //   }
+    //   return d.expectedValue != null ? String(d.expectedValue) : "—";
+    // })();
+
+
+
+
     const expectedText = (() => {
-      if (d.expectedValue === "NA") return "NA";
-      if (d.expectedValue && typeof d.expectedValue === "object") {
-        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
-        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
-      }
-      return d.expectedValue != null ? String(d.expectedValue) : "—";
-    })();
+  const val = d.expectedValue;
+
+  if (!val) return "—";
+
+  // ✅ DEFAULT SELECTION HANDLING
+  if (val.defaultSelection) {
+    if (val.defaultSelection === "NA") return "NA";
+    if (val.defaultSelection === "0") return "0";
+    if (val.defaultSelection === "0/NA") return "0 / NA";
+  }
+
+  // range
+  if (val.min !== undefined || val.max !== undefined) {
+    const min = val.min ?? "";
+    const max = val.max ?? "";
+
+    if (min === max && min !== "") return String(min);
+    if (min === "" && max === "") return "—";
+
+    return `${min} – ${max}`;
+  }
+
+  return String(val);
+})();
 
     return new TableRow({
       children: [
@@ -96,6 +125,15 @@ export const exportComparisonToDocx = async (result, caseLabel) => {
           margins: { top: 70, bottom: 70, left: 70, right: 70 }
         }),
         new TableCell({ children: [new Paragraph(expectedText)], margins: { top: 70, bottom: 70, left: 70, right: 70 } }),
+        new TableCell({
+          children: [new Paragraph({
+            children: [new TextRun({
+              text: (d.expectedValue && typeof d.expectedValue === "object" && d.expectedValue.expertNumber) ? String(d.expectedValue.expertNumber) : "—",
+              italics: true, color: "6366f1",
+            })]
+          })],
+          margins: { top: 70, bottom: 70, left: 70, right: 70 }
+        }),
         new TableCell({
           children: [new Paragraph({ children: [new TextRun({ text: d.deviation > 0 ? `+${d.deviation}` : d.deviation != null ? String(d.deviation) : "—" })] })],
           margins: { top: 70, bottom: 70, left: 70, right: 70 }

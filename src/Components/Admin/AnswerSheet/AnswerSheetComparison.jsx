@@ -50,6 +50,21 @@ const hasMismatch = (keys, map) =>
     (map[k] || []).some((d) => MISMATCH_STATUSES.has(d.status))
   );
 
+
+const isDefaultSelectionMatch = (expected, actual) => {
+  if (!expected?.defaultSelection) return false;
+
+  if (expected.defaultSelection === "NA") return actual === "NA";
+  if (expected.defaultSelection === "0") return actual === "0";
+
+  if (expected.defaultSelection === "0/NA") {
+    return actual === "0" || actual === "NA";
+  }
+
+  return false;
+};
+
+
 // "MMT_8_initial.Biceps.left" → "Biceps · Left"
 const prettyField = (fieldName = "") =>
   fieldName
@@ -82,6 +97,78 @@ const prettySection = (key = "") => {
   };
   return MAP[key] || key;
 };
+// const formatDisplayValue = (val) => {
+//   if (val === null || val === undefined || val === "") return "—";
+//   if (val === "NA") return "NA";
+//   if (typeof val !== "object") return String(val);
+
+//   if ("value" in val) {
+//     const v = val.value;
+//     if (v === 0 || v === "0") return "0";
+//     if (v === "NA") return "NA";
+//     if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") return "0 & NA";
+//     return String(v);
+//   }
+
+//   if ("min" in val || "max" in val) {
+//     const minVal = val.min !== undefined && val.min !== null ? val.min : "";
+//     const maxVal = val.max !== undefined && val.max !== null ? val.max : "";
+//     if (minVal === maxVal && minVal !== "") return String(minVal);
+//     if (minVal === "" && maxVal === "") return "—";
+//     return `${minVal} – ${maxVal}`;
+//   }
+
+//   return String(val);
+// };
+
+
+
+ const formatDisplayValue = (val) => {
+  if (val === null || val === undefined || val === "") return "—";
+
+  // direct values
+  if (val === "NA") return "NA";
+  if (val === "0") return "0";
+
+  if (typeof val !== "object") return String(val);
+
+  // ✅ HANDLE DEFAULT SELECTION (IMPORTANT FIX)
+  if ("defaultSelection" in val && val.defaultSelection) {
+    if (val.defaultSelection === "NA") return "NA";
+    if (val.defaultSelection === "0") return "0";
+    if (val.defaultSelection === "0/NA") return "0 / NA";
+  }
+
+  // value object
+  if ("value" in val) {
+    const v = val.value;
+    if (v === 0 || v === "0") return "0";
+    if (v === "NA") return "NA";
+
+    if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") {
+      return "0 / NA";
+    }
+
+    return String(v);
+  }
+
+  // range
+  if ("min" in val || "max" in val) {
+    const minVal = val.min ?? "";
+    const maxVal = val.max ?? "";
+
+    if (minVal === maxVal && minVal !== "") return String(minVal);
+    if (minVal === "" && maxVal === "") return "—";
+
+    return `${minVal} – ${maxVal}`;
+  }
+
+  return String(val);
+};
+
+
+
+
 
 // ─── Accuracy ring SVG ────────────────────────────────────────────────────────
 const AccuracyRing = ({ percent }) => {
@@ -206,7 +293,7 @@ const GlobalSummaryTable = ({ discrepancies }) => {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ background: "#f8fafc" }}>
-              {["#", "Section", "Field", "Your Answer", "Expected", "Deviation", "Status"].map((h) => (
+              {["#", "Section", "Field", "Your Answer", "Expected", "Expert#", "Deviation", "Status"].map((h) => (
                 <th key={h} style={{
                   padding: "8px 12px", textAlign: "left",
                   color: "#475569", fontWeight: 700,
@@ -219,7 +306,10 @@ const GlobalSummaryTable = ({ discrepancies }) => {
           </thead>
           <tbody>
             {rows.map((d, i) => {
-              const isMismatch = MISMATCH_STATUSES.has(d.status);
+              //const isMismatch = MISMATCH_STATUSES.has(d.status);
+              const isMismatch =
+  MISMATCH_STATUSES.has(d.status) &&
+  !isDefaultSelectionMatch(d.expectedValue, d.actualValue);
               return (
                 <tr key={i} style={{
                   background: isMismatch
@@ -235,23 +325,17 @@ const GlobalSummaryTable = ({ discrepancies }) => {
                     {prettyField(d.fieldName)}
                   </td>
                   <td style={{ padding: "7px 12px", fontWeight: 700, color: isMismatch ? "#b91c1c" : "#065f46" }}>
-                    {d.actualValue != null
-                      ? String(d.actualValue)
-                      : <span style={{ color: "#9ca3af", fontStyle: "italic" }}>not submitted</span>}
+                    {formatDisplayValue(d.actualValue)}
                   </td>
-                  {/* <td style={{ padding: "7px 12px", color: "#374151", fontWeight: 600 }}>
-                    {d.expectedValue
-                      ? `${d.expectedValue.min} – ${d.expectedValue.max}`
-                      : d.expectedValue != null ? String(d.expectedValue) : "—"}
-                  </td> */}
                   <td style={{ padding: "7px 12px", color: "#374151", fontWeight: 600 }}>
+                    {formatDisplayValue(d.expectedValue)}
+                  </td>
+                  <td style={{ padding: "7px 12px", color: "#6366f1", fontWeight: 600, fontStyle: "italic" }}>
                     {(() => {
-                      if (d.expectedValue === "NA") return "NA";
-                      if (d.expectedValue && typeof d.expectedValue === "object") {
-                        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
-                        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+                      if (d.expectedValue && typeof d.expectedValue === "object" && d.expectedValue.expertNumber) {
+                        return d.expectedValue.expertNumber;
                       }
-                      return d.expectedValue != null ? String(d.expectedValue) : "—";
+                      return <span style={{ color: "#cbd5e1" }}>—</span>;
                     })()}
                   </td>
                   <td style={{
@@ -310,7 +394,7 @@ const FieldComparisonTable = ({ sectionKeys, discrepancyMap }) => {
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 3px", fontSize: 12 }}>
           <thead>
             <tr>
-              {["Field", "Your Answer", "Expected", "Deviation", "Status"].map((h) => (
+              {["Field", "Your Answer", "Expected", "Expert#", "Deviation", "Status"].map((h) => (
                 <th key={h} style={{
                   padding: "4px 10px", textAlign: "left",
                   color: "#6b7280", fontWeight: 700,
@@ -323,7 +407,11 @@ const FieldComparisonTable = ({ sectionKeys, discrepancyMap }) => {
           </thead>
           <tbody>
             {allDiscrepancies.map((d, i) => {
-              const isMismatch = MISMATCH_STATUSES.has(d.status);
+              //const isMismatch = MISMATCH_STATUSES.has(d.status);
+              const isMismatch =
+  MISMATCH_STATUSES.has(d.status) &&
+  !isDefaultSelectionMatch(d.expectedValue, d.actualValue);
+
               const rowBg = isMismatch ? "rgba(239,68,68,0.08)" : "rgba(16,185,129,0.08)";
               return (
                 <tr key={i}>
@@ -337,23 +425,17 @@ const FieldComparisonTable = ({ sectionKeys, discrepancyMap }) => {
                     padding: "6px 10px", background: rowBg,
                     color: isMismatch ? "#b91c1c" : "#065f46", fontWeight: 700,
                   }}>
-                    {d.actualValue != null
-                      ? String(d.actualValue)
-                      : <span style={{ color: "#9ca3af", fontStyle: "italic" }}>not submitted</span>}
+                    {formatDisplayValue(d.actualValue)}
                   </td>
-                  {/* <td style={{ padding: "6px 10px", background: rowBg, color: "#374151", fontWeight: 600 }}>
-                    {d.expectedValue
-                      ? `${d.expectedValue.min} – ${d.expectedValue.max}`
-                      : d.expectedValue != null ? String(d.expectedValue) : "—"}
-                  </td> */}
                   <td style={{ padding: "6px 10px", background: rowBg, color: "#374151", fontWeight: 600 }}>
+                    {formatDisplayValue(d.expectedValue)}
+                  </td>
+                  <td style={{ padding: "6px 10px", background: rowBg, color: "#6366f1", fontWeight: 600, fontStyle: "italic" }}>
                     {(() => {
-                      if (d.expectedValue === "NA") return "NA";
-                      if (d.expectedValue && typeof d.expectedValue === "object") {
-                        if (d.expectedValue.min === d.expectedValue.max) return String(d.expectedValue.min);
-                        return `${d.expectedValue.min} – ${d.expectedValue.max}`;
+                      if (d.expectedValue && typeof d.expectedValue === "object" && d.expectedValue.expertNumber) {
+                        return d.expectedValue.expertNumber;
                       }
-                      return d.expectedValue != null ? String(d.expectedValue) : "—";
+                      return <span style={{ color: "#cbd5e1" }}>—</span>;
                     })()}
                   </td>
                   <td style={{
@@ -380,7 +462,16 @@ const SectionWrapper = ({ formKey, visit, discrepancyMap, label, children }) => 
   const [expanded, setExpanded] = useState(true);
 
   const sections = FORM_SECTION_MAP[formKey]?.(visit) ?? [];
-  const isMismatch = hasMismatch(sections, discrepancyMap);
+ // const isMismatch = hasMismatch(sections, discrepancyMap);
+
+
+  const isMismatch = sections.some((k) =>
+  (discrepancyMap[k] || []).some(
+    (d) =>
+      MISMATCH_STATUSES.has(d.status) &&
+      !isDefaultSelectionMatch(d.expectedValue, d.actualValue)
+  )
+);
   const isMatch = !isMismatch; // green for everything that is NOT a mismatch
 
   const borderColor = isMismatch ? "#ef4444" : "#10b981";

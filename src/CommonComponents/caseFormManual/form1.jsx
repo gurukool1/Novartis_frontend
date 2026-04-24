@@ -64,27 +64,78 @@ export default function Form1({
 
   /* ---------------- SUMMARY CALCULATION ---------------- */
 
-  const summary = useMemo(() => {
-    const perSide = { right: 0, left: 0, axial: 0 };
+  // const summary = useMemo(() => {
+  //   const perSide = { right: 0, left: 0, axial: 0 };
 
-    Object.entries(scores).forEach(([key, val]) => {
-      if (val === "" || val === "NA" || val === undefined || val === null) return;
-      const [, side] = key.split(".");
-      if (perSide[side] !== undefined) {
-        if (isRangeValue(val)) {
-          const min = Number(val.min) || 0;
-          const max = Number(val.max) || 0;
-          perSide[side] += (min + max) / 2;
-        } else {
-          perSide[side] += Number(val);
-        }
+  //   Object.entries(scores).forEach(([key, val]) => {
+  //     if (val === "" || val === "NA" || val === undefined || val === null) return;
+  //     const [, side] = key.split(".");
+  //     if (perSide[side] !== undefined) {
+  //       if (isRangeValue(val)) {
+  //         const min = Number(val.min) || 0;
+  //         const max = Number(val.max) || 0;
+  //         perSide[side] += (min + max) / 2;
+  //       } else {
+  //         perSide[side] += Number(val);
+  //       }
+  //     }
+  //   });
+
+  //   const total = perSide.right + perSide.left + perSide.axial;
+
+  //   return { perSide, total: Math.round(total * 100) / 100 };
+  // }, [scores]);
+
+ const summary = useMemo(() => {
+  const perSide = { right: 0, left: 0, axial: 0 };
+
+  Object.entries(scores).forEach(([key, val]) => {
+    if (val === "" || val === "NA" || val === undefined || val === null) return;
+
+    const [, side] = key.split(".");
+    if (!perSide.hasOwnProperty(side)) return;
+
+    // ─── RANGE VALUE ─────────────────────────────
+    if (isRangeValue(val)) {
+      const min = Number(val.min);
+      const max = Number(val.max);
+
+      if (!isNaN(min) && !isNaN(max)) {
+        perSide[side] += (min + max) / 2;
       }
-    });
+      return;
+    }
 
-    const total = perSide.right + perSide.left + perSide.axial;
+    // ─── PRESET OBJECT (0 / NA / BOTH) ───────────
+    if (typeof val === "object" && val !== null && "value" in val) {
+      const v = val.value;
 
-    return { perSide, total: Math.round(total * 100) / 100 };
-  }, [scores]);
+      if (v === 0) {
+        perSide[side] += 0;
+      } else if (typeof v === "object" && v.zero === 0) {
+        perSide[side] += 0;
+      }
+      return;
+    }
+
+    // ─── NORMAL NUMBER ───────────────────────────
+    const num = Number(val);
+    if (!isNaN(num)) {
+      perSide[side] += num;
+    }
+  });
+
+  const total =
+    (perSide.right || 0) +
+    (perSide.left || 0) +
+    (perSide.axial || 0);
+
+  return {
+    perSide,
+    total: Math.round(total * 100) / 100
+  };
+}, [scores]);
+
 
   /* ---------------- UI ---------------- */
 

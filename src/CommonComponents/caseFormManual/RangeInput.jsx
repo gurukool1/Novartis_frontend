@@ -1,21 +1,11 @@
 import React from "react";
 
 /**
- * RangeInput — A dual min/max input for admin manual answer sheet.
+ * RangeInput — A dual min/max input with optional preset dropdown and expert number field.
  *
- * Props:
- *   value      – current value. Can be:
- *                  { min, max }    → range object (new format)
- *                  "3"             → legacy single value (backward compat)
- *                  "NA" | "yes"    → non-numeric string
- *                  "" | undefined  → empty
- *   onChange    – (newValue) => void
- *   options     – array of valid numeric option values, e.g. [0,1,2,3]
- *   disabled    – whether the input is read-only
- *   allowNA     – whether "NA" is a valid option (default false)
- *   isNonNumeric – if true, render a single <select> (for yes/no fields)
- *   nonNumericOpts – options for non-numeric select, e.g. ["yes","no"]
- *   style       – extra CSS to apply to the wrapper
+ * New Payload Rules:
+ * 1. Preset Mode (0, NA, BOTH): { value: 0 | "NA" | {zero:0, na:"NA"}, expertNumber? }
+ * 2. Range Mode (min-max): { min, max, expertNumber? }
  */
 export default function RangeInput({
   value,
@@ -29,7 +19,7 @@ export default function RangeInput({
 }) {
   // ─── Non-numeric mode (yes/no, text fields) ───────────────────────
   if (isNonNumeric) {
-    const strVal = typeof value === "object" && value !== null ? "" : value ?? "";
+    const strVal = typeof value === "object" && value !== null ? (value.value ?? "") : value ?? "";
     return (
       <select
         className="input sm light px-2"
@@ -48,187 +38,319 @@ export default function RangeInput({
     );
   }
 
-  // ─── Parse current value into min/max ─────────────────────────────
-  let minVal = "";
-  let maxVal = "";
-  let isNA = false;
-  let isZero = false;
+//   // ─── Parse current value ──────────────────────────────────────────
+//   let minVal = "";
+//   let maxVal = "";
+//   let expertNumber = "";
+//   let presetValue = ""; // "", "0", "NA", "BOTH"
 
-  if (value === "NA") {
-    isNA = true;
-  } else if (typeof value === "object" && value !== null && ("min" in value || "max" in value)) {
-    // New range format
-    minVal = value.min !== undefined && value.min !== null ? String(value.min) : "";
-    maxVal = value.max !== undefined && value.max !== null ? String(value.max) : "";
+//   // if (value && typeof value === "object") {
+//   //   expertNumber = value.expertNumber !== undefined && value.expertNumber !== null ? String(value.expertNumber) : "";
+
+//   //   if ("value" in value) {
+//   //     const v = value.value;
+//   //     if (v === 0 || v === "0") presetValue = "0";
+//   //     else if (v === "NA") presetValue = "NA";
+//   //     else if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") presetValue = "BOTH";
+//   //   } else if ("min" in value || "max" in value) {
+//   //     minVal = value.min !== undefined && value.min !== null ? String(value.min) : "";
+//   //     maxVal = value.max !== undefined && value.max !== null ? String(value.max) : "";
+//   //   }
+//   // } else if (value === "NA") {
+//   //   presetValue = "NA";
+//   // } else if (value === 0 || value === "0") {
+//   //   presetValue = "0";
+//   // } else if (value !== undefined && value !== null && value !== "") {
+//   //   // Legacy single numeric value
+//   //   minVal = String(value);
+//   //   maxVal = String(value);
+//   // }
+
+
+//    if (value && typeof value === "object") {
+
+//   expertNumber = value.expertNumber ?? "";
+
+//   // ✅ NEW FIX
+//   if ("zero" in value || "na" in value) {
+//     if (value.zero === 0 && value.na === "NA") presetValue = "BOTH";
+//     else if (value.zero === 0) presetValue = "0";
+//     else if (value.na === "NA") presetValue = "NA";
+//   }
+
+//   else if ("value" in value) {
+//     const v = value.value;
+//     if (v === 0 || v === "0") presetValue = "0";
+//     else if (v === "NA") presetValue = "NA";
+//     else if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") presetValue = "BOTH";
+//   }
+
+//   else if ("min" in value || "max" in value) {
+//     minVal = value.min ?? "";
+//     maxVal = value.max ?? "";
+//   }
+// }
+
+
+
+let minVal = "";
+let maxVal = "";
+let expertNumber = "";
+let presetValue = "";
+
+if (value && typeof value === "object") {
+  expertNumber = value.expertNumber ?? "";
+
+  const v = value.value;
+
+  // ───── PRESETS ─────
+  if (v === 0 || v === "0") {
+    presetValue = "0";
+  } 
+  else if (v === "NA") {
+    presetValue = "NA";
+  } 
+  else if (v && typeof v === "object") {
+    const hasZero = v.zero === 0;
+    const hasNA = v.na === "NA";
+
+    if (hasZero && hasNA) presetValue = "BOTH";
+    else if (hasZero) presetValue = "0";
+    else if (hasNA) presetValue = "NA";
+  }
+
+  // ───── RANGE ─────
+  else if ("min" in value || "max" in value) {
+    minVal = value.min ?? "";
+    maxVal = value.max ?? "";
+  }
+}
+
+
+
+
+  const isPresetMode = presetValue !== "";
+  const isRangeEntered = (minVal !== "" || maxVal !== "");
+
+  // ─── Handlers ─────────────────────────────────────────────────────
+  // const handlePresetChange = (e) => {
+  //   const sel = e.target.value;
+  //   const base = { expertNumber: expertNumber || "" };
     
-    // Check if it's explicitly explicitly {min: 0, max: 0}
-    if (minVal === "0" && maxVal === "0") {
-      isZero = true;
-    }
-  } else if (value !== undefined && value !== null && value !== "" && value !== "NA") {
-    // Legacy single value → treat as both min and max
-    minVal = String(value);
-    maxVal = String(value);
-  }
-
-  // const handleMinChange = (e) => {
-  //   const v = e.target.value;
-  //   if (v === "NA") {
-  //     onChange("NA");
-  //     return;
-  //   }
-  //   const newMin = v === "" ? "" : v;
-  //   const currentMax = isNA ? "" : maxVal;
-  //   if (newMin === "" && currentMax === "") {
-  //     onChange("");
+  //   if (sel === "NA") {
+  //     onChange({ ...base, value: "NA" });
+  //   } else if (sel === "0") {
+  //     onChange({ ...base, value: 0 });
+  //   } else if (sel === "BOTH") {
+  //     onChange({ ...base, value: { zero: 0, na: "NA" } });
   //   } else {
-  //     onChange({ min: newMin === "" ? "" : Number(newMin), max: currentMax === "" ? "" : Number(currentMax) });
-  //   }
-  // };
-
-const handleMinChange = (e) => {
-  let v = e.target.value;
-
-  if (v === "") {
-    onChange({ min: "", max: maxVal || "" });
-    return;
-  }
-
-  v = Math.max(0, Math.min(10, Number(v))); // clamp 0–10
-
-  onChange({
-    min: v,
-    max: maxVal === "" ? "" : Number(maxVal),
-  });
-};
-
-  // const handleMaxChange = (e) => {
-  //   const v = e.target.value;
-  //   if (v === "NA") {
-  //     onChange("NA");
-  //     return;
-  //   }
-  //   const newMax = v === "" ? "" : v;
-  //   const currentMin = isNA ? "" : minVal;
-  //   if (currentMin === "" && newMax === "") {
-  //     onChange("");
-  //   } else {
-  //     onChange({ min: currentMin === "" ? "" : Number(currentMin), max: newMax === "" ? "" : Number(newMax) });
+  //     // Clear preset -> explicit range mode
+  //     onChange({ ...base, min: "", max: "" });
   //   }
   // };
 
 
-const handleMaxChange = (e) => {
-  let v = e.target.value;
+  const handlePresetChange = (e) => {
+  const sel = e.target.value;
 
-  if (v === "") {
-    onChange({ min: minVal || "", max: "" });
-    return;
+  const base = { expertNumber: expertNumber || "" };
+
+  if (sel === "0") {
+    onChange({ ...base, value: 0 });
+  } 
+  else if (sel === "NA") {
+    onChange({ ...base, value: "NA" });
+  } 
+  else if (sel === "BOTH") {
+    onChange({ ...base, value: { zero: 0, na: "NA" } });
+  } 
+  else {
+    onChange({ ...base, min: "", max: "" });
   }
-
-  v = Math.max(0, Math.min(10, Number(v)));
-
-  onChange({
-    min: minVal === "" ? "" : Number(minVal),
-    max: v,
-  });
 };
 
-  const handleNAClick = () => {
-    if (isNA) {
-      onChange("");
-    } else {
-      onChange("NA");
+
+
+  const handleMinChange = (e) => {
+    let v = e.target.value;
+    const base = { expertNumber };
+    if (v === "") {
+      onChange({ ...base, min: "", max: maxVal || "" });
+      return;
     }
+    v = Math.max(0, Math.min(10, Number(v)));
+    onChange({ ...base, min: v, max: maxVal === "" ? "" : Number(maxVal) });
   };
 
-  const handleZeroClick = () => {
-    if (isZero) {
-      onChange("");
-    } else {
-      onChange({ min: 0, max: 0 });
+  const handleMaxChange = (e) => {
+    let v = e.target.value;
+    const base = { expertNumber };
+    if (v === "") {
+      onChange({ ...base, min: minVal || "", max: "" });
+      return;
     }
+    v = Math.max(0, Math.min(10, Number(v)));
+    onChange({ ...base, min: minVal === "" ? "" : Number(minVal), max: v });
   };
 
-  // Build combined options list (numbers)
-  const numOptions = options.filter((o) => o !== "NA");
+  // const handleExpertChange = (e) => {
+  //   const v = e.target.value;
+  //   if (isPresetMode) {
+  //     const pVal = presetValue === "BOTH" ? { zero: 0, na: "NA" } : (presetValue === "0" ? 0 : "NA");
+  //     onChange({ value: pVal, expertNumber: v });
+  //   } else {
+  //     onChange({
+  //       min: minVal === "" ? "" : Number(minVal),
+  //       max: maxVal === "" ? "" : Number(maxVal),
+  //       expertNumber: Number(v),
+  //     });
+  //   }
+  // };
 
+
+  const handleExpertChange = (e) => {
+  const v = e.target.value;
+
+  if (isPresetMode) {
+    const pVal = presetValue === "BOTH"
+      ? { zero: 0, na: "NA" }
+      : (presetValue === "0" ? 0 : "NA");
+
+    onChange({ value: pVal, expertNumber: v }); // keep internal same
+  } else {
+    onChange({
+      min: minVal === "" ? "" : Number(minVal),
+      max: maxVal === "" ? "" : Number(maxVal),
+      expertNumber: v,
+    });
+  }
+};
+
+
+
+
+  // UI state for hiding/disabling
+  //const showRange = !isPresetMode;
+  //const showDropdown = !isRangeEntered || isPresetMode;
+  const showDropdown = true;
+
+  // ─── Render ───────────────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexWrap: "nowrap", ...style }}>
-      {/* MIN INPUT */}
-    <input
-      type="number"
-      min={0}
-      max={10}
-      className="input sm light px-2"
-      style={{ width: "60px", fontSize: "11px", padding: "3px 2px" }}
-      value={isNA ? "" : minVal}
-      onChange={handleMinChange}
-      disabled={disabled || isNA || isZero}
-      placeholder="Min"
-    />
-
-    <span style={{ fontSize: 10, color: "#666", fontWeight: 700 }}>to</span>
-
-    {/* MAX INPUT */}
-    <input
-      type="number"
-      min={0}
-      max={10}
-      className="input sm light px-2"
-      style={{ width: "60px", fontSize: "11px", padding: "3px 2px" }}
-      value={isNA ? "" : maxVal}
-      onChange={handleMaxChange}
-      disabled={disabled || isNA || isZero}
-      placeholder="Max"
-    />
-      {allowNA && (
-        <>
-          <label
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      gap: 4, ...style
+    }}>
+      {/* Row 1: Dropdown and/or Min/Max */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        gap: 4, flexWrap: "nowrap", height: "26px"
+      }}>
+        {/* Preset Dropdown */}
+        {/* {allowNA && showDropdown && (
+          <select
+            className="input sm light"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-              fontSize: 10,
-              color: "#666",
-              cursor: disabled ? "default" : "pointer",
-              userSelect: "none",
-              marginLeft: 2,
+              width: 80, fontSize: 10, padding: "3px 2px",
+              fontWeight: 700, color: presetValue ? "#1d4ed8" : "#9ca3af",
+              borderRadius: 4, cursor: disabled ? "default" : "pointer",
+              background: presetValue ? "#eff6ff" : "#fff",
+              border: presetValue ? "1px solid #bfdbfe" : "1px solid #e2e8f0"
             }}
+            value={presetValue}
+            onChange={handlePresetChange}
+            disabled={disabled}
           >
-            <input
-              type="checkbox"
-              checked={isZero}
-              onChange={handleZeroClick}
-              disabled={disabled || isNA}
-              style={{ width: 13, height: 13 }}
-            />
-            0
-          </label>
+            <option value="">— Range —</option>
+            <option value="0">0</option>
+            <option value="NA">NA</option>
+            <option value="BOTH">0 & NA</option>
+          </select>
+        )} */}
 
-          <label
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-              fontSize: 10,
-              color: "#666",
-              cursor: disabled ? "default" : "pointer",
-              userSelect: "none",
-              marginLeft: 2,
-            }}
-          >
+        {/* MIN/MAX Inputs */}
+        {/* {showRange && ( */}
+          <>
             <input
-              type="checkbox"
-              checked={isNA}
-              onChange={handleNAClick}
-              disabled={disabled || isZero}
-              style={{ width: 13, height: 13 }}
+              type="number"
+              min={0}
+              max={10}
+              className="input sm light px-2"
+              style={{
+                width: 50, fontSize: 11, padding: "3px 2px", textAlign: "center",
+                borderRadius: 4,
+              }}
+              //value={minVal}
+              value={minVal === 0 ? "0" : minVal ?? ""}
+
+              onChange={handleMinChange}
+              disabled={disabled}
+              placeholder="Min"
             />
-            NA
-          </label>
-        </>
-      )}
+            <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 700 }}>to</span>
+            <input
+              type="number"
+              min={0}
+              max={10}
+              className="input sm light px-2"
+              style={{
+                width: 50, fontSize: 11, padding: "3px 2px", textAlign: "center",
+                borderRadius: 4,
+              }}
+             // value={maxVal}
+              value={maxVal === 0 ? "0" : maxVal ?? ""}
+              onChange={handleMaxChange}
+              disabled={disabled || isPresetMode}
+              placeholder="Max"
+            />
+          </>
+        {/* )} */}
+
+
+
+      {allowNA && showDropdown && (
+          <select
+            className="input sm light"
+            style={{
+              width: 80, fontSize: 10, padding: "3px 2px",
+              fontWeight: 700, color: presetValue ? "#1d4ed8" : "#9ca3af",
+              borderRadius: 4, cursor: disabled ? "default" : "pointer",
+              background: presetValue ? "#eff6ff" : "#fff",
+              border: presetValue ? "1px solid #bfdbfe" : "1px solid #e2e8f0"
+            }}
+            value={presetValue}
+            onChange={handlePresetChange}
+            disabled={disabled}
+          >
+            <option value="">— Range —</option>
+            <option value="0">0</option>
+            <option value="NA">NA</option>
+            <option value="BOTH">0 & NA</option>
+          </select>
+        )}
+
+
+      </div>
+
+      {/* Row 2: Expert Number */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 3,
+      }}>
+        <span style={{ fontSize: 9, color: "#64748b", fontWeight: 600 }}>Expert Number</span>
+        <input
+          type="number"
+          className="input sm light px-1"
+          style={{
+            width: 60, fontSize: 10, padding: "2px 2px", textAlign: "center",
+            borderRadius: 4, color: "#334155",
+            border: "1px dashed #cbd5e1",
+          }}
+          //value={expertNumber}
+          value={expertNumber ?? ""}
+          onChange={handleExpertChange}
+          disabled={disabled}
+          placeholder="opt"
+        />
+      </div>
     </div>
   );
 }

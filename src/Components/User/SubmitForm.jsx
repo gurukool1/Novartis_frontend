@@ -50,7 +50,9 @@ export const SubmitForm = () => {
   const userCaseId = Number(userCaseIdParam) || null;
   //  const formId = Number(formIdParam) || null;
   //  console.log("SubmitForm params - caseId:", caseId, "formId:", formId, "userCaseId:", userCaseId, "isReadOnly:", isReadOnly);
-  const formId = useSelector((state) => state.forms.formId);
+ // const formId = useSelector((state) => state.forms.formId);
+  const formIdFromStore = useSelector((state) => state.forms.formId);
+const formId = Number(formIdParam) || formIdFromStore || null;
   const [showSubmitAlert, setShowSubmitAlert] = useState(false);
   const initialPercent = useSelector((state) => state.forms.initialPercent);
   const followUpPercent = useSelector((state) => state.forms.followUpPercent);
@@ -156,6 +158,7 @@ export const SubmitForm = () => {
       isLoadingFromApi.current = true;
 
       prevFormDataRef.current = null;
+      
       dispatch(resetSectionTotals());
       dispatch(loadForm({ caseId, formId, userCaseId }, token)).then(() => {
         // small delay lets redux propagate all SET_SECTION_DATA actions before we snapshot

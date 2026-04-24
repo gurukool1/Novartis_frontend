@@ -96,6 +96,9 @@ export const loadForm = (payload, token, { mirrorToLocalStorage = true } = {}) =
     if (res?.data) {
       // Keep existing data processing logic
       const form = res.data.form;
+      if (res?.data?.form?.id) {
+  dispatch(setFormId(res.data.form.id));
+}
   //onsole.log("Fetched form datakkkk:", form, "Form ID: lOAD", form.id);
     //const caseId = form.caseId;
       //const formId = form.id;

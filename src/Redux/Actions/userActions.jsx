@@ -223,24 +223,6 @@ export const getAssignedCases = () => async (dispatch, getState) => {
     const formReferences = res.data.assignCaseForm;
 
 
-
-//    const rows = res.data.data.data; // <-- FIXED
-//     const formReferences = res.data.data.assignCaseForm; // <-- FIXED
-
-//     const assignedCases = rows.map(r => {
-//       const matchedForm = formReferences.find(
-//         f => f.userCaseId === r.id
-//       );
-
-// return {
-//         ...r,
-//         formId: matchedForm ? matchedForm.formId : null,
-//         fileUrl: r.Case?.fileUrl,
-//         pdfUrl: r.Case?.pdfUrl,
-//         title: r.Case?.title,
-//         formType: r.formType || { AllForms: true },
-//       };
-//     });
     const assignedCases = rows.map(r => ({
       ...r,
       formId: (formReferences.find(f => f.userCaseId === r.id) || {}).formId || null,

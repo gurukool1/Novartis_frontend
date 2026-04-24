@@ -3,102 +3,405 @@
  */
 
 /**
- * Check if a value is a range object  { min, max }
+ * Check if a value is a range object { min, max }
  */
 export const isRangeValue = (val) =>
-  typeof val === "object" && val !== null && ("min" in val || "max" in val);
+  val && typeof val === "object" && ("min" in val || "max" in val);
+
+/**
+ * Check if a value is a preset object { value }
+ */
+export const isPresetValue = (val) =>
+  val && typeof val === "object" && "value" in val;
 
 /**
  * Check if a value is non-numeric (yes/no, text)
  */
 export const isNonNumericValue = (val) => {
   if (val === "NA" || val === "" || val === undefined || val === null) return false;
-  if (isRangeValue(val)) return false;
+  if (isRangeValue(val) || isPresetValue(val)) return false;
   return isNaN(Number(val));
 };
 
 /**
- * Convert legacy single-value data to range format for display.
- * Leaves non-numeric values and "NA" untouched.
+ * Convert legacy/primitive data to the appropriate object format for display.
  * 
- * { "Scalp.erythema": "2" }  →  { "Scalp.erythema": { min: 2, max: 2 } }
- * { "papule": "yes" }        →  { "papule": "yes" } (unchanged)
- * { "Neck Flexor.axial": "NA" } → { "Neck Flexor.axial": "NA" } (unchanged)
+ * { "Scalp": "2" }  →  { "Scalp": { min: 2, max: 2, expertNumber: "" } }
+ * { "Scalp": 0 }    →  { "Scalp": { value: 0, expertNumber: "" } }
+ * { "Scalp": "NA" } →  { "Scalp": { value: "NA", expertNumber: "" } }
  */
+
+
+
+// export const normalizeScoresToRange = (scores) => {
+//   if (!scores || typeof scores !== "object") return scores;
+
+//   const result = {};
+
+//   for (const [key, val] of Object.entries(scores)) {
+
+//     if (!val || typeof val !== "object") {
+//       result[key] = val;
+//       continue;
+//     }
+
+//     // ✅ RANGE CASE (already correct)
+//     if ("min" in val || "max" in val) {
+//       result[key] = {
+//         min: val.min ?? "",
+//         max: val.max ?? "",
+//         expertNumber: val.expertNumber ?? ""
+//       };
+//       continue;
+//     }
+
+//     // ✅ PRESET CASE FIX (MAIN BUG)
+//     if ("zero" in val || "na" in val) {
+//       let value;
+
+//       if (val.zero === 0 && val.na === "NA") {
+//         value = { zero: 0, na: "NA" };
+//       } else if (val.zero === 0) {
+//         value = 0;
+//       } else if (val.na === "NA") {
+//         value = "NA";
+//       }
+
+//       result[key] = {
+//         value,
+//         expertNumber: val.expertNumber ?? ""
+//       };
+//       continue;
+//     }
+
+//     // fallback
+//     result[key] = {
+//       ...val,
+//       expertNumber: val.expertNumber ?? ""
+//     };
+//   }
+
+//   return result;
+// };
+
+
+
 export const normalizeScoresToRange = (scores) => {
   if (!scores || typeof scores !== "object") return scores;
 
   const result = {};
+
   for (const [key, val] of Object.entries(scores)) {
-    if (isRangeValue(val)) {
-      // Already a range
+
+    // ── Primitive / null — pass through as-is ──────────────────────────────
+    if (!val || typeof val !== "object") {
       result[key] = val;
-    } else if (val === "NA" || val === "" || val === undefined || val === null) {
-      result[key] = val;
-    } else if (isNaN(Number(val))) {
-      // Non-numeric (yes/no) → keep as-is
-      result[key] = val;
-    } else {
-      // Single numeric → convert to range
-      const num = Number(val);
-      result[key] = { min: num, max: num };
+      continue;
     }
+
+    const expertNumber = val.expertNumber ?? "";
+
+    // ── 1.  NEW API format: { min, max, expertNumber, defaultSelection } ────
+    //        defaultSelection takes priority over min/max because the backend
+    //        stores BOTH in the same record but only one branch is "active".
+    if ("defaultSelection" in val) {
+      const ds = val.defaultSelection;
+
+      if (ds === "0/NA") {
+        // Both 0 and NA selected
+        result[key] = { value: { zero: 0, na: "NA" }, expertNumber };
+        continue;
+      }
+      if (ds === "0") {
+        result[key] = { value: 0, expertNumber };
+        continue;
+      }
+      if (ds === "NA") {
+        result[key] = { value: "NA", expertNumber };
+        continue;
+      }
+
+      // defaultSelection is null / "" / unknown → fall through to range logic
+      result[key] = {
+        min: val.min ?? "",
+        max: val.max ?? "",
+        expertNumber,
+      };
+      continue;
+    }
+
+    // ── 2.  Pure range object: { min, max } ────────────────────────────────
+    if ("min" in val || "max" in val) {
+      result[key] = {
+        min: val.min ?? "",
+        max: val.max ?? "",
+        expertNumber,
+      };
+      continue;
+    }
+
+    // ── 3.  Direct zero/na keys (older backend shape) ──────────────────────
+    const hasZero = val.zero === 0;
+    const hasNA   = val.na === "NA";
+
+    if ("value" in val) {
+      result[key] = { value: val.value, expertNumber };
+      continue;
+    }
+    if (hasZero && hasNA) {
+      result[key] = { value: { zero: 0, na: "NA" }, expertNumber };
+      continue;
+    }
+    if (hasZero) {
+      result[key] = { value: 0, expertNumber };
+      continue;
+    }
+    if (hasNA) {
+      result[key] = { value: "NA", expertNumber };
+      continue;
+    }
+
+    // ── 4.  Fallback: spread the object and ensure expertNumber ────────────
+    result[key] = { ...val, expertNumber };
   }
+
   return result;
 };
+
+
+
+
+
+
+
 
 /**
  * Flatten range scores back to a payload format for submission.
- * Already range objects are kept as-is.
- * { "Scalp.erythema": { min: 1, max: 3 } } → kept as-is
  */
 export const flattenRangeScores = (scores) => {
   if (!scores || typeof scores !== "object") return scores;
-
-  const result = {};
-  for (const [key, val] of Object.entries(scores)) {
-    result[key] = val; // Keep range objects as { min, max }
-  }
-  return result;
+  return { ...scores };
 };
 
 /**
- * Compute total for range scores — uses the average of min and max for display.
- * If value is NA or empty, skips it.
+ * Compute total for range scores.
  */
 export const computeRangeTotal = (scores) => {
   let total = 0;
   for (const val of Object.values(scores || {})) {
-    if (val === "" || val === "NA" || val === undefined || val === null) continue;
-    if (isRangeValue(val)) {
+    if (!val || val === "NA") continue;
+
+    if (isPresetValue(val)) {
+      const v = val.value;
+      if (v === 0) total += 0;
+      else if (v && typeof v === 'object' && v.zero === 0) total += 0;
+      // "NA" adds nothing
+    } else if (isRangeValue(val)) {
       const min = Number(val.min) || 0;
       const max = Number(val.max) || 0;
       total += (min + max) / 2;
-    } else if (!isNaN(Number(val))) {
+    } else if (!isNaN(Number(val)) && typeof val !== 'object') {
       total += Number(val);
     }
   }
   return Math.round(total * 100) / 100;
 };
 
+
+// export const transformPayload = (data) => {
+//   if (!data || typeof data !== "object") return data;
+
+//   const result = {};
+
+//   for (const [key, val] of Object.entries(data)) {
+//     if (!val || typeof val !== "object") {
+//       result[key] = val;
+//       continue;
+//     }
+
+//     // ─── PRESET VALUE CASE ───
+//     if ("value" in val) {
+//       const { value, expertNumber } = val;
+
+//       let newObj = {};
+
+//       if (value === 0) {
+//         newObj.zero = 0;
+//       } else if (value === "NA") {
+//         newObj.na = "NA";
+//       } else if (typeof value === "object") {
+//         if (value.zero === 0) newObj.zero = 0;
+//         if (value.na === "NA") newObj.na = "NA";
+//       }
+
+//       if (expertNumber !== undefined) {
+//         newObj.expertNumber = expertNumber;
+//       }
+
+//       result[key] = newObj;
+//     }
+
+//     // ─── RANGE CASE ───
+//     else if ("min" in val || "max" in val) {
+//       result[key] = {
+//         min: val.min,
+//         max: val.max,
+//         expertNumber: val.expertNumber ?? ""
+//       };
+//     }
+
+//     else {
+//       result[key] = val;
+//     }
+//   }
+
+//   return result;
+// };
+
+
+
+
+export const transformPayload = (data) => {
+  if (!data || typeof data !== "object") return data;
+
+  const result = {};
+
+  for (const [key, val] of Object.entries(data)) {
+
+    let min = null;
+    let max = null;
+    let defaultSelection = null;
+    let expertNumber = "";
+
+    if (val && typeof val === "object") {
+
+      expertNumber = val.expertNumber ?? "";
+
+      // ─── RANGE CASE ─────────────────────────
+      if ("min" in val || "max" in val) {
+        if (val.min !== "" && val.max !== "") {
+          min = Number(val.min);
+          max = Number(val.max);
+          defaultSelection = null; // important rule
+        }
+      }
+
+      // ─── PRESET CASE ────────────────────────
+      if ("value" in val) {
+        const v = val.value;
+
+        if (v === 0) {
+          defaultSelection = "0";
+        } 
+        else if (v === "NA") {
+          defaultSelection = "NA";
+        } 
+        else if (typeof v === "object") {
+          const hasZero = v.zero === 0;
+          const hasNA = v.na === "NA";
+
+          if (hasZero && hasNA) {
+            defaultSelection = "0/NA";
+          } else if (hasZero) {
+            defaultSelection = "0";
+          } else if (hasNA) {
+            defaultSelection = "NA";
+          }
+        }
+
+        // enforce rule
+        min = null;
+        max = null;
+      }
+
+      // ─── DIRECT zero/na CASE (from API normalize) ─────
+      if ("zero" in val || "na" in val) {
+        const hasZero = val.zero === 0;
+        const hasNA = val.na === "NA";
+
+        if (hasZero && hasNA) {
+          defaultSelection = "0/NA";
+        } else if (hasZero) {
+          defaultSelection = "0";
+        } else if (hasNA) {
+          defaultSelection = "NA";
+        }
+
+        min = null;
+        max = null;
+      }
+
+    }
+
+    // ✅ ALWAYS SEND ALL KEYS
+    result[key] = {
+      min,
+      max,
+      defaultSelection,
+      expertNumber: expertNumber !== undefined ? String(expertNumber) : ""
+    };
+  }
+
+  return result;
+};
+
+
+
+
+
+
+
+
 /**
- * Validate range data. Returns array of error strings.
-//  */
-export const validateRangeScores = (scores) => {
+ * Validate that every field in a form's scores object has at least one of:
+ *   1. A complete range  — both min AND max are filled (non-empty, non-null)
+ *   2. A preset/dropdown — a "value" key OR direct "zero"/"na" keys are present
+ *
+ * Primitive values (e.g. expertNumber stored as a top-level key) are skipped
+ * because they are metadata, not answer fields.
+ *
+ * Used ONLY for new submissions (not updates).
+ */
+export const validateRequiredFields = (scores) => {
   const errors = [];
+
   for (const [key, val] of Object.entries(scores || {})) {
-    if (val === "" || val === "NA" || val === undefined || val === null) continue;
-    if (isRangeValue(val)) {
-      if (val.min === "" || val.min === undefined || val.min === null) {
-        errors.push(`${key}: Min value is empty`);
-      }
-      if (val.max === "" || val.max === undefined || val.max === null) {
-        errors.push(`${key}: Max value is empty`);
-      }
-      if (val.min !== "" && val.max !== "" && Number(val.min) > Number(val.max)) {
-        errors.push(`${key}: Min (${val.min}) is greater than Max (${val.max})`);
-      }
+
+    // ── Skip primitive/metadata entries (e.g. expertNumber at form level) ──
+    if (val === null || val === undefined || typeof val !== "object") {
+      // A primitive that is not a boolean is not an answer field — skip it
+      continue;
+    }
+
+    // ── 1. Range satisfied: both min AND max are filled ──────────────────
+    const hasRange =
+      ("min" in val || "max" in val) &&
+      val.min !== "" &&
+      val.max !== "" &&
+      val.min !== null &&
+      val.max !== null &&
+      val.min !== undefined &&
+      val.max !== undefined;
+
+    // ── 2a. Preset via "value" key (set by RangeInput dropdown) ──────────
+    const hasPresetValue =
+      "value" in val &&
+      val.value !== "" &&
+      val.value !== null &&
+      val.value !== undefined;
+
+    // ── 2b. Preset via direct "zero"/"na" keys (from normalizeScoresToRange)
+    const hasDirectPreset =
+      ("zero" in val && val.zero === 0) ||
+      ("na" in val && val.na === "NA");
+
+    const hasPreset = hasPresetValue || hasDirectPreset;
+
+    // ── MAIN RULE: must satisfy at least one ─────────────────────────────
+    if (!hasRange && !hasPreset) {
+      errors.push(`${key}: Required`);
     }
   }
+
   return errors;
 };
