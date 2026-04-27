@@ -20,33 +20,89 @@ export default function Form4({
     onChange(updated);
   };
 
-  // Compute doubled value from score range
-  const getScoreAvg = () => {
-    const val = scores.score;
-    if (!val || val === "" || val === "NA") return "";
-    if (isRangeValue(val)) {
-      const min = Number(val.min) || 0;
-      const max = Number(val.max) || 0;
-      return (min + max) / 2;
-    }
-    return Number(val);
-  };
+  // // Compute doubled value from score range
+  // const getScoreAvg = () => {
+  //   const val = scores.score;
+  //   if (!val || val === "" || val === "NA") return "";
+  //   if (isRangeValue(val)) {
+  //     const min = Number(val.min) || 0;
+  //     const max = Number(val.max) || 0;
+  //     return (min + max) / 2;
+  //   }
+  //   return Number(val);
+  // };
+
+
+ const getScoreAvg = () => {
+  const val = scores.score;
+
+  if (!val) return 0;
+
+  // ✅ handle preset
+  if (typeof val === "object" && "value" in val) {
+    if (val.value === 0) return 0;
+    if (val.value === "NA") return 0;
+    if (typeof val.value === "object" && val.value.zero === 0) return 0;
+  }
+
+  // ✅ range
+  if (isRangeValue(val)) {
+    const min = Number(val.min) || 0;
+    const max = Number(val.max) || 0;
+    return (min + max) / 2;
+  }
+
+  // ✅ number
+  return Number(val) || 0;
+};
+
+
 
   const scoreAvg = getScoreAvg();
   const papuleVal = scores.papule;
+  // const doubledValue =
+  //   papuleVal === "yes" && scoreAvg !== ""
+  //     ? Math.round(scoreAvg * 2 * 100) / 100
+  //     : "";
+
   const doubledValue =
-    papuleVal === "yes" && scoreAvg !== ""
-      ? Math.round(scoreAvg * 2 * 100) / 100
-      : "";
+  papuleVal === "yes"
+    ? Math.round(scoreAvg * 2 * 100) / 100
+    : 0;
+  // const getNumericAvg = (field) => {
+  //   const val = scores[field];
+  //   if (!val || val === "" || val === "NA") return 0;
+  //   if (isRangeValue(val)) {
+  //     return ((Number(val.min) || 0) + (Number(val.max) || 0)) / 2;
+  //   }
+  //   return Number(val);
+  // };
+
+
 
   const getNumericAvg = (field) => {
-    const val = scores[field];
-    if (!val || val === "" || val === "NA") return 0;
-    if (isRangeValue(val)) {
-      return ((Number(val.min) || 0) + (Number(val.max) || 0)) / 2;
-    }
-    return Number(val);
-  };
+  const val = scores[field];
+
+  if (!val) return 0;
+
+  // ✅ handle preset
+  if (typeof val === "object" && "value" in val) {
+    if (val.value === 0) return 0;
+    if (val.value === "NA") return 0;
+    if (typeof val.value === "object" && val.value.zero === 0) return 0;
+  }
+
+  // ✅ range
+  if (isRangeValue(val)) {
+    return ((Number(val.min) || 0) + (Number(val.max) || 0)) / 2;
+  }
+
+  // ✅ number
+  return Number(val) || 0;
+};
+
+
+
 
   const total = Math.round(
     ((doubledValue === "" ? 0 : Number(doubledValue)) +

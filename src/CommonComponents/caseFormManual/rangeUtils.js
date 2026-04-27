@@ -23,67 +23,6 @@ export const isNonNumericValue = (val) => {
   return isNaN(Number(val));
 };
 
-/**
- * Convert legacy/primitive data to the appropriate object format for display.
- * 
- * { "Scalp": "2" }  →  { "Scalp": { min: 2, max: 2, expertNumber: "" } }
- * { "Scalp": 0 }    →  { "Scalp": { value: 0, expertNumber: "" } }
- * { "Scalp": "NA" } →  { "Scalp": { value: "NA", expertNumber: "" } }
- */
-
-
-
-// export const normalizeScoresToRange = (scores) => {
-//   if (!scores || typeof scores !== "object") return scores;
-
-//   const result = {};
-
-//   for (const [key, val] of Object.entries(scores)) {
-
-//     if (!val || typeof val !== "object") {
-//       result[key] = val;
-//       continue;
-//     }
-
-//     // ✅ RANGE CASE (already correct)
-//     if ("min" in val || "max" in val) {
-//       result[key] = {
-//         min: val.min ?? "",
-//         max: val.max ?? "",
-//         expertNumber: val.expertNumber ?? ""
-//       };
-//       continue;
-//     }
-
-//     // ✅ PRESET CASE FIX (MAIN BUG)
-//     if ("zero" in val || "na" in val) {
-//       let value;
-
-//       if (val.zero === 0 && val.na === "NA") {
-//         value = { zero: 0, na: "NA" };
-//       } else if (val.zero === 0) {
-//         value = 0;
-//       } else if (val.na === "NA") {
-//         value = "NA";
-//       }
-
-//       result[key] = {
-//         value,
-//         expertNumber: val.expertNumber ?? ""
-//       };
-//       continue;
-//     }
-
-//     // fallback
-//     result[key] = {
-//       ...val,
-//       expertNumber: val.expertNumber ?? ""
-//     };
-//   }
-
-//   return result;
-// };
-
 
 
 export const normalizeScoresToRange = (scores) => {
@@ -208,55 +147,6 @@ export const computeRangeTotal = (scores) => {
 };
 
 
-// export const transformPayload = (data) => {
-//   if (!data || typeof data !== "object") return data;
-
-//   const result = {};
-
-//   for (const [key, val] of Object.entries(data)) {
-//     if (!val || typeof val !== "object") {
-//       result[key] = val;
-//       continue;
-//     }
-
-//     // ─── PRESET VALUE CASE ───
-//     if ("value" in val) {
-//       const { value, expertNumber } = val;
-
-//       let newObj = {};
-
-//       if (value === 0) {
-//         newObj.zero = 0;
-//       } else if (value === "NA") {
-//         newObj.na = "NA";
-//       } else if (typeof value === "object") {
-//         if (value.zero === 0) newObj.zero = 0;
-//         if (value.na === "NA") newObj.na = "NA";
-//       }
-
-//       if (expertNumber !== undefined) {
-//         newObj.expertNumber = expertNumber;
-//       }
-
-//       result[key] = newObj;
-//     }
-
-//     // ─── RANGE CASE ───
-//     else if ("min" in val || "max" in val) {
-//       result[key] = {
-//         min: val.min,
-//         max: val.max,
-//         expertNumber: val.expertNumber ?? ""
-//       };
-//     }
-
-//     else {
-//       result[key] = val;
-//     }
-//   }
-
-//   return result;
-// };
 
 
 

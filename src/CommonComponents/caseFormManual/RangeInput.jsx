@@ -38,58 +38,6 @@ export default function RangeInput({
     );
   }
 
-//   // ─── Parse current value ──────────────────────────────────────────
-//   let minVal = "";
-//   let maxVal = "";
-//   let expertNumber = "";
-//   let presetValue = ""; // "", "0", "NA", "BOTH"
-
-//   // if (value && typeof value === "object") {
-//   //   expertNumber = value.expertNumber !== undefined && value.expertNumber !== null ? String(value.expertNumber) : "";
-
-//   //   if ("value" in value) {
-//   //     const v = value.value;
-//   //     if (v === 0 || v === "0") presetValue = "0";
-//   //     else if (v === "NA") presetValue = "NA";
-//   //     else if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") presetValue = "BOTH";
-//   //   } else if ("min" in value || "max" in value) {
-//   //     minVal = value.min !== undefined && value.min !== null ? String(value.min) : "";
-//   //     maxVal = value.max !== undefined && value.max !== null ? String(value.max) : "";
-//   //   }
-//   // } else if (value === "NA") {
-//   //   presetValue = "NA";
-//   // } else if (value === 0 || value === "0") {
-//   //   presetValue = "0";
-//   // } else if (value !== undefined && value !== null && value !== "") {
-//   //   // Legacy single numeric value
-//   //   minVal = String(value);
-//   //   maxVal = String(value);
-//   // }
-
-
-//    if (value && typeof value === "object") {
-
-//   expertNumber = value.expertNumber ?? "";
-
-//   // ✅ NEW FIX
-//   if ("zero" in value || "na" in value) {
-//     if (value.zero === 0 && value.na === "NA") presetValue = "BOTH";
-//     else if (value.zero === 0) presetValue = "0";
-//     else if (value.na === "NA") presetValue = "NA";
-//   }
-
-//   else if ("value" in value) {
-//     const v = value.value;
-//     if (v === 0 || v === "0") presetValue = "0";
-//     else if (v === "NA") presetValue = "NA";
-//     else if (v && typeof v === "object" && v.zero === 0 && v.na === "NA") presetValue = "BOTH";
-//   }
-
-//   else if ("min" in value || "max" in value) {
-//     minVal = value.min ?? "";
-//     maxVal = value.max ?? "";
-//   }
-// }
 
 
 
@@ -132,22 +80,7 @@ if (value && typeof value === "object") {
   const isPresetMode = presetValue !== "";
   const isRangeEntered = (minVal !== "" || maxVal !== "");
 
-  // ─── Handlers ─────────────────────────────────────────────────────
-  // const handlePresetChange = (e) => {
-  //   const sel = e.target.value;
-  //   const base = { expertNumber: expertNumber || "" };
-    
-  //   if (sel === "NA") {
-  //     onChange({ ...base, value: "NA" });
-  //   } else if (sel === "0") {
-  //     onChange({ ...base, value: 0 });
-  //   } else if (sel === "BOTH") {
-  //     onChange({ ...base, value: { zero: 0, na: "NA" } });
-  //   } else {
-  //     // Clear preset -> explicit range mode
-  //     onChange({ ...base, min: "", max: "" });
-  //   }
-  // };
+
 
 
   const handlePresetChange = (e) => {
