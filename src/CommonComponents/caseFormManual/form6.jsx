@@ -55,6 +55,7 @@ export default function Form6({
                   {/* selectable score (Range) */}
                   <td style={{ padding: "12px" }}>
                     <RangeInput
+                      id={`${visit}_hairLoss`}
                       value={scores.hairLoss}
                       onChange={handleChange}
                       options={HAIRLOSS_OPTS}

@@ -65,10 +65,10 @@ export default function Form4({
   //     ? Math.round(scoreAvg * 2 * 100) / 100
   //     : "";
 
-  const doubledValue =
-  papuleVal === "yes"
-    ? Math.round(scoreAvg * 2 * 100) / 100
-    : 0;
+  // const doubledValue =
+  // papuleVal === "yes"
+  //   ? Math.round(scoreAvg * 2 * 100) / 100
+  //   : 0;
   // const getNumericAvg = (field) => {
   //   const val = scores[field];
   //   if (!val || val === "" || val === "NA") return 0;
@@ -77,6 +77,27 @@ export default function Form4({
   //   }
   //   return Number(val);
   // };
+
+  const getDoubledValue = () => {
+  const val = scores.score;
+
+  if (!val || papuleVal !== "yes") return 0;
+
+  // ✅ range value
+  if (isRangeValue(val)) {
+    const min = (Number(val.min) || 0);
+    const max = (Number(val.max) || 0);
+
+    return min * max
+  }
+
+  // ✅ normal number
+  return (Number(val) || 0) * 2;
+};
+
+const doubledValue = getDoubledValue();
+
+
 
 
 
@@ -190,6 +211,7 @@ export default function Form4({
                     {/* Score 0-3 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
                       <RangeInput
+                        id={`${visit}_score`}
                         value={scores.score}
                         onChange={handleChange("score")}
                         options={SCORE_OPTS}
@@ -210,6 +232,7 @@ export default function Form4({
                     {/* Ulcer 0-1 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
                       <RangeInput
+                        id={`${visit}_ulcer`}
                         value={scores.ulcer}
                         onChange={handleChange("ulcer")}
                         options={ULCER_OPTS}
@@ -233,6 +256,7 @@ export default function Form4({
                     {/* Damage 0-2 (Range) */}
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
                       <RangeInput
+                        id={`${visit}_damage`}
                         value={scores.damage}
                         onChange={handleChange("damage")}
                         options={DAMAGE_OPTS}
@@ -257,6 +281,7 @@ export default function Form4({
 
                     <td style={{ border: "0.0625rem solid #b3b0b0", padding: "12px" }}>
                       <RangeInput
+                        id={`${visit}_papule`}
                         value={scores.papule}
                         onChange={handleChange("papule")}
                         isNonNumeric={true}

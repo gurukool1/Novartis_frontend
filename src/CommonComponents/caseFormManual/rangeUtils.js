@@ -2,6 +2,44 @@
  * Utility functions for range-based answer sheet data
  */
 
+export const FORM_SCHEMAS = {
+  MMT_8: [
+    "Deltoid.right", "Deltoid.left", "Biceps.right", "Biceps.left",
+    "Quadriceps.right", "Quadriceps.left", "Gluteus Medius.right", "Gluteus Medius.left",
+    "Gluteus Maximus.right", "Gluteus Maximus.left", "Wrist Extensor.right", "Wrist Extensor.left",
+    "Ankle Dorsiflexion.right", "Ankle Dorsiflexion.left", "Neck Flexor.axial"
+  ],
+  CDASI_Activity: [
+    "Scalp", "Malar Area", "Periorbital", "Rest of the Face", "V‑area Neck (Frontal)",
+    "Posterior Neck", "Upper Back & Shoulders", "Rest of Back & Buttocks", "Abdomen",
+    "Lateral Upper Thigh", "Rest of Leg & Feet", "Arm", "Mechanic's Hand",
+    "Dorsum of Hands (Not Over Joints)", "Gottron's - Not on Hands"
+  ].flatMap(loc => [`${loc}.erythema`, `${loc}.scale`, `${loc}.erosion`]),
+  CDASI_Damage: [
+    "Scalp", "Malar Area", "Periorbital", "Rest of the Face", "V‑area Neck (Frontal)",
+    "Posterior Neck", "Upper Back & Shoulders", "Rest of Back & Buttocks", "Abdomen",
+    "Lateral Upper Thigh", "Rest of Leg and feet", "Arm", "Mechanic's Hand",
+    "Dorsums of hands (Not Over Joints)", "Gottron's - Not on Hands"
+  ].flatMap(loc => [`${loc}.poikilo`, `${loc}.calcinosis`]),
+  Gottron_Hands: [
+    "score", "ulcer", "damage"
+  ],
+  Periungual: ["peri"],
+  Alopecia: ["hairLoss"],
+  MDAAT: [
+    "constitutional.vas", "pyrexia.cf", "weightLoss.cf", "fatigue.cf",
+    "cutaneous.vas", "cutaneousUlceration.cf", "erythroderma.cf", "panniculitis.cf",
+    "erythemaWithSec.cf", "erythemaNoSec.cf", "heliotrope.cf", "gottrons.cf", "periungualCap.cf",
+    "diffuseHair.cf", "patchyHair.cf", "mechanicsHand.cf",
+    "skeletal.vas", "polyarthritis.cf", "moderateArth.cf", "mildArth.cf", "arthralgia.cf",
+    "gi.vas", "dysphagiaSevere.cf", "dysphagiaMild.cf", "abdPainSevere.cf", "abdPainModerate.cf", "abdPainMild.cf",
+    "pulmonary.vas", "dyspneaRest.cf", "dyspneaExert.cf", "dyspneaILD.cf", "parenchymal.cf", "pft.cf", "dysphoniaSevere.cf", "dysphoniaMild.cf",
+    "cardio.vas", "pericarditis.cf", "myocarditis.cf", "arrhythmiaSevere.cf", "arrhythmiaOther.cf", "sinusTachy.cf",
+    "oda.vas", "oda.cf", "extraMuscular.vas", "muscle.vas", "myositisSevere.cf", "myositisModerate.cf", "myositisMild.cf", "myalgia.cf", "global.vas"
+  ],
+  Physician: ["physicianGlobal.vas"]
+};
+
 /**
  * Check if a value is a range object { min, max }
  */
@@ -43,31 +81,62 @@ export const normalizeScoresToRange = (scores) => {
     // ── 1.  NEW API format: { min, max, expertNumber, defaultSelection } ────
     //        defaultSelection takes priority over min/max because the backend
     //        stores BOTH in the same record but only one branch is "active".
+    // if ("defaultSelection" in val) {
+    //   const ds = val.defaultSelection;
+
+    //   if (ds === "0/NA") {
+    //     // Both 0 and NA selected
+    //     result[key] = { value: { zero: 0, na: "NA" }, expertNumber };
+    //     continue;
+    //   }
+    //   if (ds === "0") {
+    //     result[key] = { value: 0, expertNumber };
+    //     continue;
+    //   }
+    //   if (ds === "NA") {
+    //     result[key] = { value: "NA", expertNumber };
+    //     continue;
+    //   }
+
+    //   // defaultSelection is null / "" / unknown → fall through to range logic
+    //   result[key] = {
+    //     min: val.min ?? "",
+    //     max: val.max ?? "",
+    //     expertNumber,
+    //   };
+    //   continue;
+    // }
+
+
     if ("defaultSelection" in val) {
-      const ds = val.defaultSelection;
 
-      if (ds === "0/NA") {
-        // Both 0 and NA selected
-        result[key] = { value: { zero: 0, na: "NA" }, expertNumber };
-        continue;
-      }
-      if (ds === "0") {
-        result[key] = { value: 0, expertNumber };
-        continue;
-      }
-      if (ds === "NA") {
-        result[key] = { value: "NA", expertNumber };
-        continue;
-      }
+  result[key] = {
+    min: val.min ?? "",
+    max: val.max ?? "",
+    expertNumber,
+  };
 
-      // defaultSelection is null / "" / unknown → fall through to range logic
-      result[key] = {
-        min: val.min ?? "",
-        max: val.max ?? "",
-        expertNumber,
-      };
-      continue;
-    }
+  const ds = val.defaultSelection;
+
+  if (ds === "0/NA") {
+    result[key].value = { zero: 0, na: "NA" };
+  }
+  else if (ds === "0") {
+    result[key].value = 0;
+  }
+  else if (ds === "NA") {
+    result[key].value = "NA";
+  }
+
+  continue;
+}
+
+
+
+
+
+
+
 
     // ── 2.  Pure range object: { min, max } ────────────────────────────────
     if ("min" in val || "max" in val) {
@@ -177,32 +246,64 @@ export const transformPayload = (data) => {
       }
 
       // ─── PRESET CASE ────────────────────────
-      if ("value" in val) {
-        const v = val.value;
+      // if ("value" in val) {
+      //   const v = val.value;
 
-        if (v === 0) {
-          defaultSelection = "0";
-        } 
-        else if (v === "NA") {
-          defaultSelection = "NA";
-        } 
-        else if (typeof v === "object") {
-          const hasZero = v.zero === 0;
-          const hasNA = v.na === "NA";
+      //   if (v === 0) {
+      //     defaultSelection = "0";
+      //   } 
+      //   else if (v === "NA") {
+      //     defaultSelection = "NA";
+      //   } 
+      //   else if (typeof v === "object") {
+      //     const hasZero = v.zero === 0;
+      //     const hasNA = v.na === "NA";
 
-          if (hasZero && hasNA) {
-            defaultSelection = "0/NA";
-          } else if (hasZero) {
-            defaultSelection = "0";
-          } else if (hasNA) {
-            defaultSelection = "NA";
-          }
-        }
+      //     if (hasZero && hasNA) {
+      //       defaultSelection = "0/NA";
+      //     } else if (hasZero) {
+      //       defaultSelection = "0";
+      //     } else if (hasNA) {
+      //       defaultSelection = "NA";
+      //     }
+      //   }
 
-        // enforce rule
-        min = null;
-        max = null;
-      }
+      //   // enforce rule
+      //   min = null;
+      //   max = null;
+      // }
+
+
+    if ("value" in val) {
+  const v = val.value;
+
+  if (v === 0) {
+    defaultSelection = "0";
+  } 
+  else if (v === "NA") {
+    defaultSelection = "NA";
+  } 
+  else if (typeof v === "object") {
+    const hasZero = v.zero === 0;
+    const hasNA = v.na === "NA";
+
+    if (hasZero && hasNA) {
+      defaultSelection = "0/NA";
+    } else if (hasZero) {
+      defaultSelection = "0";
+    } else if (hasNA) {
+      defaultSelection = "NA";
+    }
+  }
+
+  // DO NOT wipe min/max anymore
+}
+
+
+
+
+
+
 
       // ─── DIRECT zero/na CASE (from API normalize) ─────
       if ("zero" in val || "na" in val) {
@@ -252,14 +353,18 @@ export const transformPayload = (data) => {
  *
  * Used ONLY for new submissions (not updates).
  */
-export const validateRequiredFields = (scores) => {
+export const validateRequiredFields = (scores, formName) => {
   const errors = [];
+  
+  const baseFormName = formName ? formName.replace(/_(initial|followUp)$/, '') : '';
+  const expectedKeys = FORM_SCHEMAS[baseFormName] || Object.keys(scores || {});
 
-  for (const [key, val] of Object.entries(scores || {})) {
+  for (const key of expectedKeys) {
+    const val = scores ? scores[key] : null;
 
-    // ── Skip primitive/metadata entries (e.g. expertNumber at form level) ──
-    if (val === null || val === undefined || typeof val !== "object") {
-      // A primitive that is not a boolean is not an answer field — skip it
+    // Check if the value is completely missing or not an object
+    if (!val || typeof val !== "object") {
+      errors.push(`${key}: Required`);
       continue;
     }
 

@@ -99,40 +99,46 @@ export default function Form2({
                       <td>{loc}</td>
                       <td>
                         <RangeInput
+                          id={`${visit}_${loc}.erythema`}
                           value={scores[`${loc}.erythema`]}
                           onChange={handleChange(loc, "erythema")}
                           options={ERYTHEMA_OPTS}
                           disabled={readOnly}
+                          allowSimultaneous={loc === "Posterior Neck"}
                         />
                       </td>
                       <td>
                         <RangeInput
+                          id={`${visit}_${loc}.scale`}
                           value={scores[`${loc}.scale`]}
                           onChange={handleChange(loc, "scale")}
                           options={SCALE_OPTS}
                           disabled={readOnly}
+                          allowSimultaneous={loc === "Posterior Neck"}
                         />
                       </td>
                       <td>
                         <RangeInput
+                          id={`${visit}_${loc}.erosion`}
                           value={scores[`${loc}.erosion`]}
                           onChange={handleChange(loc, "erosion")}
                           options={EROSION_OPTS}
                           disabled={readOnly}
+                          allowSimultaneous={loc === "Posterior Neck"}
                         />
                       </td>
                     </tr>
                   ))}
                   <tr className="total-scoring-value">
-                    <td>Total Score</td>
-                    <td colSpan={3}>
+                    {/* <td>Total Scorek</td> */}
+                    {/* <td colSpan={3}>
                       <input
                         type="text"
                         className="input sm light"
                         value={total}
                         readOnly
                       />
-                    </td>
+                    </td> */}
                   </tr>
                 </tbody>
               </table>

@@ -192,6 +192,7 @@ export default function Form1({
                     <td></td>
                     <td>
                       <RangeInput
+                        id={`${visit}_Neck Flexor.axial`}
                         value={scores["Neck Flexor.axial"]}
                         onChange={handleChange("Neck Flexor", "axial")}
                         options={SCORE_OPTIONS}
@@ -216,6 +217,7 @@ export default function Form1({
                           <td key={side}>
                             {row.cols.includes(side) ? (
                               <RangeInput
+                                id={`${visit}_${row.label}.${side}`}
                                 value={scores[`${row.label}.${side}`]}
                                 onChange={handleChange(row.label, side)}
                                 options={SCORE_OPTIONS}

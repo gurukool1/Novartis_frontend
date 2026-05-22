@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { isRangeValue } from "./rangeUtils";
 
 export default function Form9({
@@ -25,19 +25,35 @@ export default function Form9({
     isFieldEmpty = false;
   }
 
+  const [localMin, setLocalMin] = useState(minVal);
+  const [localMax, setLocalMax] = useState(maxVal);
+
+  useEffect(() => {
+    setLocalMin(minVal);
+    setLocalMax(maxVal);
+  }, [minVal, maxVal]);
+
   const handleMinChange = (newMin) => {
-    const currentMax = isRangeValue(scores[fieldName]) ? Number(scores[fieldName].max) || 0 : maxVal;
-    onChange({
-      ...scores,
-      [fieldName]: { min: newMin, max: Math.max(newMin, currentMax) },
-    });
+    setLocalMin(newMin);
   };
 
   const handleMaxChange = (newMax) => {
+    setLocalMax(newMax);
+  };
+
+  const commitMinChange = () => {
+    const currentMax = isRangeValue(scores[fieldName]) ? Number(scores[fieldName].max) || 0 : maxVal;
+    onChange({
+      ...scores,
+      [fieldName]: { min: localMin, max: Math.max(localMin, currentMax) },
+    });
+  };
+
+  const commitMaxChange = () => {
     const currentMin = isRangeValue(scores[fieldName]) ? Number(scores[fieldName].min) || 0 : minVal;
     onChange({
       ...scores,
-      [fieldName]: { min: Math.min(currentMin, newMax), max: newMax },
+      [fieldName]: { min: Math.min(currentMin, localMax), max: localMax },
     });
   };
 
@@ -60,14 +76,14 @@ export default function Form9({
         Please rate patient's global (overall) disease activity
       </strong>
 
-      <div className="slider-section text-center mt-3 px-3">
+      <div className="slider-section text-center mt-3 px-3" id={`${visit}_${fieldName}`}>
         <div>
-          Selected Range: <strong>{isFieldEmpty ? "-" : `${minVal} – ${maxVal}`}</strong>
+          Selected Range: <strong>{isFieldEmpty ? "-" : `${localMin} – ${localMax}`}</strong>
         </div>
 
         {/* Min Slider */}
         <div style={{ marginTop: 12, marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: "#888", fontWeight: 600 }}>Min: {minVal}</span>
+          <span style={{ fontSize: 11, color: "#888", fontWeight: 600 }}>Min: {localMin}</span>
           <div style={{ position: "relative", margin: "6px 0" }}>
             <div style={{
               height: 6,
@@ -76,18 +92,18 @@ export default function Form9({
               position: "relative",
             }}>
               <div style={{
-                width: `${minVal * 10}%`,
+                width: `${localMin * 10}%`,
                 height: "100%",
                 background: "#3b82f6",
                 borderRadius: 3,
-                transition: "width 0.2s ease",
+                transition: "width 0.1s ease",
               }} />
               <div style={{
                 position: "absolute",
-                left: `${minVal * 10}%`,
+                left: `${localMin * 10}%`,
                 top: -7,
                 transform: "translateX(-50%)",
-                transition: "left 0.2s ease",
+                transition: "left 0.1s ease",
               }}>
                 <div style={{
                   width: 20,
@@ -103,9 +119,12 @@ export default function Form9({
               min={0}
               max={10}
               step={1}
-              value={minVal}
+              value={localMin}
               disabled={readOnly}
               onChange={(e) => handleMinChange(Number(e.target.value))}
+              onMouseUp={commitMinChange}
+              onTouchEnd={commitMinChange}
+              onKeyUp={commitMinChange}
               style={{
                 position: "absolute",
                 top: 0,
@@ -121,7 +140,7 @@ export default function Form9({
 
         {/* Max Slider */}
         <div style={{ marginTop: 8 }}>
-          <span style={{ fontSize: 11, color: "#888", fontWeight: 600 }}>Max: {maxVal}</span>
+          <span style={{ fontSize: 11, color: "#888", fontWeight: 600 }}>Max: {localMax}</span>
           <div style={{ position: "relative", margin: "6px 0" }}>
             <div style={{
               height: 6,
@@ -130,18 +149,18 @@ export default function Form9({
               position: "relative",
             }}>
               <div style={{
-                width: `${maxVal * 10}%`,
+                width: `${localMax * 10}%`,
                 height: "100%",
                 background: "var(--button-1)",
                 borderRadius: 3,
-                transition: "width 0.2s ease",
+                transition: "width 0.1s ease",
               }} />
               <div style={{
                 position: "absolute",
-                left: `${maxVal * 10}%`,
+                left: `${localMax * 10}%`,
                 top: -7,
                 transform: "translateX(-50%)",
-                transition: "left 0.2s ease",
+                transition: "left 0.1s ease",
               }}>
                 <div style={{
                   width: 20,
@@ -157,9 +176,12 @@ export default function Form9({
               min={0}
               max={10}
               step={1}
-              value={maxVal}
+              value={localMax}
               disabled={readOnly}
               onChange={(e) => handleMaxChange(Number(e.target.value))}
+              onMouseUp={commitMaxChange}
+              onTouchEnd={commitMaxChange}
+              onKeyUp={commitMaxChange}
               style={{
                 position: "absolute",
                 top: 0,
@@ -171,6 +193,33 @@ export default function Form9({
               }}
             />
           </div>
+        </div>
+
+        {/* Expert Number Input */}
+        <div style={{ marginTop: 24, textAlign: "left" }}>
+          <label style={{ fontSize: 13, fontWeight: "bold", marginRight: 10 }}>
+            Expert Number:
+          </label>
+          <input
+            type="text"
+            className="input sm light px-2"
+            style={{ width: 150 }}
+            value={scores[fieldName]?.expertNumber || ""}
+            onChange={(e) => {
+              const currentMin = isRangeValue(scores[fieldName]) ? Number(scores[fieldName].min) || 0 : minVal;
+              const currentMax = isRangeValue(scores[fieldName]) ? Number(scores[fieldName].max) || 0 : maxVal;
+              onChange({
+                ...scores,
+                [fieldName]: {
+                  min: currentMin,
+                  max: currentMax,
+                  expertNumber: e.target.value
+                }
+              });
+            }}
+            disabled={readOnly}
+            placeholder="Enter Expert No."
+          />
         </div>
       </div>
     </div>

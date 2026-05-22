@@ -56,6 +56,7 @@ export default function Form5({
                   {/* selectable score (Range) */}
                   <td style={{ padding: "12px" }}>
                     <RangeInput
+                      id={`${visit}_peri`}
                       value={scores.peri}
                       onChange={handleChange}
                       options={PERI_OPTS}

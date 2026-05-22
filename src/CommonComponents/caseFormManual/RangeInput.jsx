@@ -16,12 +16,15 @@ export default function RangeInput({
   isNonNumeric = false,
   nonNumericOpts = [],
   style = {},
+  id,
+    allowSimultaneous = false
 }) {
   // ─── Non-numeric mode (yes/no, text fields) ───────────────────────
   if (isNonNumeric) {
     const strVal = typeof value === "object" && value !== null ? (value.value ?? "") : value ?? "";
     return (
       <select
+        id={id}
         className="input sm light px-2"
         style={{ width: "82px", ...style }}
         value={strVal}
@@ -46,12 +49,48 @@ let maxVal = "";
 let expertNumber = "";
 let presetValue = "";
 
+// if (value && typeof value === "object") {
+//   expertNumber = value.expertNumber ?? "";
+
+//   const v = value.value;
+
+//   // ───── PRESETS ─────
+//   if (v === 0 || v === "0") {
+//     presetValue = "0";
+//   } 
+//   else if (v === "NA") {
+//     presetValue = "NA";
+//   } 
+//   else if (v && typeof v === "object") {
+//     const hasZero = v.zero === 0;
+//     const hasNA = v.na === "NA";
+
+//     if (hasZero && hasNA) presetValue = "BOTH";
+//     else if (hasZero) presetValue = "0";
+//     else if (hasNA) presetValue = "NA";
+//   }
+
+//   // ───── RANGE ─────
+//   else if ("min" in value || "max" in value) {
+//     minVal = value.min ?? "";
+//     maxVal = value.max ?? "";
+//   }
+// }
+
+
 if (value && typeof value === "object") {
+
   expertNumber = value.expertNumber ?? "";
 
+  // parse range ALWAYS
+  if ("min" in value || "max" in value) {
+    minVal = value.min ?? "";
+    maxVal = value.max ?? "";
+  }
+
+  // parse preset ALSO
   const v = value.value;
 
-  // ───── PRESETS ─────
   if (v === 0 || v === "0") {
     presetValue = "0";
   } 
@@ -66,14 +105,7 @@ if (value && typeof value === "object") {
     else if (hasZero) presetValue = "0";
     else if (hasNA) presetValue = "NA";
   }
-
-  // ───── RANGE ─────
-  else if ("min" in value || "max" in value) {
-    minVal = value.min ?? "";
-    maxVal = value.max ?? "";
-  }
 }
-
 
 
 
@@ -83,10 +115,52 @@ if (value && typeof value === "object") {
 
 
 
-  const handlePresetChange = (e) => {
+//   const handlePresetChange = (e) => {
+//   const sel = e.target.value;
+
+//   const base = { expertNumber: expertNumber || "" };
+  
+//    if (allowSimultaneous) {
+//     base.min = minVal === "" ? "" : Number(minVal);
+//     base.max = maxVal === "" ? "" : Number(maxVal);
+//   }
+
+
+//   if (sel === "0") {
+//     onChange({ ...base, value: 0 });
+//   } 
+//   else if (sel === "NA") {
+//     onChange({ ...base, value: "NA" });
+//   } 
+//   else if (sel === "BOTH") {
+//     onChange({ ...base, value: { zero: 0, na: "NA" } });
+//   } 
+//    else {
+//     // clear dropdown only
+//     if (allowSimultaneous) {
+//       onChange({
+//         ...base,
+//         value: "",
+//       });
+//     }
+//   else {
+//     onChange({ ...base, min: "", max: "" });
+//   }
+// };
+
+
+const handlePresetChange = (e) => {
   const sel = e.target.value;
 
-  const base = { expertNumber: expertNumber || "" };
+  const base = {
+    expertNumber: expertNumber || "",
+  };
+
+  // preserve range if simultaneous allowed
+  if (allowSimultaneous) {
+    base.min = minVal === "" ? "" : Number(minVal);
+    base.max = maxVal === "" ? "" : Number(maxVal);
+  }
 
   if (sel === "0") {
     onChange({ ...base, value: 0 });
@@ -98,33 +172,96 @@ if (value && typeof value === "object") {
     onChange({ ...base, value: { zero: 0, na: "NA" } });
   } 
   else {
-    onChange({ ...base, min: "", max: "" });
+    // clear dropdown only
+    if (allowSimultaneous) {
+      onChange({
+        ...base,
+        value: "",
+      });
+    } else {
+      onChange({
+        ...base,
+        min: "",
+        max: "",
+      });
+    }
   }
 };
 
 
 
+
+  // const handleMinChange = (e) => {
+  //   let v = e.target.value;
+  //   const base = { expertNumber };
+  //   if (v === "") {
+  //     onChange({ ...base, min: "", max: maxVal || "" });
+  //     return;
+  //   }
+  //   v = Math.max(0, Math.min(10, Number(v)));
+  //   onChange({ ...base, min: v, max: maxVal === "" ? "" : Number(maxVal) });
+  // };
+
   const handleMinChange = (e) => {
-    let v = e.target.value;
-    const base = { expertNumber };
-    if (v === "") {
-      onChange({ ...base, min: "", max: maxVal || "" });
-      return;
-    }
-    v = Math.max(0, Math.min(10, Number(v)));
-    onChange({ ...base, min: v, max: maxVal === "" ? "" : Number(maxVal) });
-  };
+  let v = e.target.value;
+
+  if (v === "") {
+    onChange({
+      ...value,
+      min: "",
+      max: maxVal || "",
+    });
+    return;
+  }
+
+  v = Math.max(0, Math.min(10, Number(v)));
+
+  onChange({
+    ...value,
+    min: v,
+    max: maxVal === "" ? "" : Number(maxVal),
+  });
+};
+
+
+
+  // const handleMaxChange = (e) => {
+  //   let v = e.target.value;
+  //   const base = { expertNumber };
+  //   if (v === "") {
+  //     onChange({ ...base, min: minVal || "", max: "" });
+  //     return;
+  //   }
+  //   v = Math.max(0, Math.min(10, Number(v)));
+  //   onChange({ ...base, min: minVal === "" ? "" : Number(minVal), max: v });
+  // };
+
+
 
   const handleMaxChange = (e) => {
-    let v = e.target.value;
-    const base = { expertNumber };
-    if (v === "") {
-      onChange({ ...base, min: minVal || "", max: "" });
-      return;
-    }
-    v = Math.max(0, Math.min(10, Number(v)));
-    onChange({ ...base, min: minVal === "" ? "" : Number(minVal), max: v });
-  };
+  let v = e.target.value;
+
+  if (v === "") {
+    onChange({
+      ...value,
+      min: minVal || "",
+      max: "",
+    });
+    return;
+  }
+
+  v = Math.max(0, Math.min(10, Number(v)));
+
+  onChange({
+    ...value,
+    min: minVal === "" ? "" : Number(minVal),
+    max: v,
+  });
+};
+
+
+
+
 
   // const handleExpertChange = (e) => {
   //   const v = e.target.value;
@@ -169,7 +306,7 @@ if (value && typeof value === "object") {
 
   // ─── Render ───────────────────────────────────────────────────────
   return (
-    <div style={{
+    <div id={id} style={{
       display: "flex", flexDirection: "column", alignItems: "center",
       gap: 4, ...style
     }}>
@@ -232,7 +369,8 @@ if (value && typeof value === "object") {
              // value={maxVal}
               value={maxVal === 0 ? "0" : maxVal ?? ""}
               onChange={handleMaxChange}
-              disabled={disabled || isPresetMode}
+              //disabled={disabled || isPresetMode}
+              disabled={disabled || (isPresetMode && !allowSimultaneous)}
               placeholder="Max"
             />
           </>

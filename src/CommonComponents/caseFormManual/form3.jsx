@@ -80,24 +80,28 @@ export default function Form3({
                       <td>{area}</td>
                       <td>
                         <RangeInput
+                          id={`${visit}_${area}.poikilo`}
                           value={scores[`${area}.poikilo`]}
                           onChange={handleChange(area, "poikilo")}
                           options={POIKILO_OPTS}
                           disabled={readOnly}
+                          allowSimultaneous={area === "Posterior Neck"}
                         />
                       </td>
                       <td>
                         <RangeInput
+                          id={`${visit}_${area}.calcinosis`}
                           value={scores[`${area}.calcinosis`]}
                           onChange={handleChange(area, "calcinosis")}
                           options={CALCINOSIS_OPTS}
                           disabled={readOnly}
+                          allowSimultaneous={area === "Posterior Neck"}
                         />
                       </td>
                     </tr>
                   ))}
                   <tr className="total-scoring-value">
-                    <td>Total Score</td>
+                    {/* <td>Total Score</td>
                     <td colSpan={2}>
                       <input
                         type="text"
@@ -105,7 +109,7 @@ export default function Form3({
                         value={total}
                         readOnly
                       />
-                    </td>
+                    </td> */}
                   </tr>
                 </tbody>
               </table>

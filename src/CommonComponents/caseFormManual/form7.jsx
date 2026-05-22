@@ -44,37 +44,63 @@ export default function Form7({
   // Range-based Slider Component (two sliders for min/max)
   const RangeSlider = ({ name }) => {
     const val = scores[name];
-    let minVal = 0;
-    let maxVal = 0;
+    let initialMin = 0;
+    let initialMax = 0;
+    let expertNumber = "";
 
     if (isRangeValue(val)) {
-      minVal = Number(val.min) || 0;
-      maxVal = Number(val.max) || 0;
+      initialMin = Number(val.min) || 0;
+      initialMax = Number(val.max) || 0;
+      expertNumber = val.expertNumber ?? "";
     } else if (val !== "" && val !== null && val !== undefined) {
-      minVal = Number(val) || 0;
-      maxVal = Number(val) || 0;
+      initialMin = Number(val) || 0;
+      initialMax = Number(val) || 0;
     }
 
+    const [localMin, setLocalMin] = React.useState(initialMin);
+    const [localMax, setLocalMax] = React.useState(initialMax);
+
+    React.useEffect(() => {
+      setLocalMin(initialMin);
+      setLocalMax(initialMax);
+    }, [initialMin, initialMax]);
+
     const onMinSliderChange = (e) => {
-      const v = Number(e.target.value);
-      const currentMax = isRangeValue(scores[name]) ? Number(scores[name].max) || 0 : maxVal;
-      onChange({
-        ...scores,
-        [name]: { min: v, max: Math.max(v, currentMax) },
-      });
+      setLocalMin(Number(e.target.value));
     };
 
     const onMaxSliderChange = (e) => {
-      const v = Number(e.target.value);
-      const currentMin = isRangeValue(scores[name]) ? Number(scores[name].min) || 0 : minVal;
+      setLocalMax(Number(e.target.value));
+    };
+
+    const commitMinChange = () => {
+      const currentMax = isRangeValue(scores[name]) ? Number(scores[name].max) || 0 : initialMax;
       onChange({
         ...scores,
-        [name]: { min: Math.min(currentMin, v), max: v },
+        [name]: { min: localMin, max: Math.max(localMin, currentMax), expertNumber },
+      });
+    };
+
+    const commitMaxChange = () => {
+      const currentMin = isRangeValue(scores[name]) ? Number(scores[name].min) || 0 : initialMin;
+      onChange({
+        ...scores,
+        [name]: { min: Math.min(currentMin, localMax), max: localMax, expertNumber },
+      });
+    };
+
+    const onExpertChange = (e) => {
+      const v = e.target.value;
+      const currentMin = isRangeValue(scores[name]) ? Number(scores[name].min) || 0 : initialMin;
+      const currentMax = isRangeValue(scores[name]) ? Number(scores[name].max) || 0 : initialMax;
+      onChange({
+        ...scores,
+        [name]: { min: currentMin, max: currentMax, expertNumber: v },
       });
     };
 
     return (
-      <div>
+      <div id={`${visit}_${name}`}>
         <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 4 }}>
           <span style={{ fontSize: 10, color: "#888", fontWeight: 600, minWidth: 24 }}>Min</span>
           <input
@@ -82,35 +108,57 @@ export default function Form7({
             min={0}
             max={10}
             step={1}
-            value={minVal}
+            value={localMin}
             disabled={readOnly}
             onChange={onMinSliderChange}
+            onMouseUp={commitMinChange}
+            onTouchEnd={commitMinChange}
+            onKeyUp={commitMinChange}
             style={{ flex: 1 }}
           />
           <input
             readOnly
             className="input sm light px-2"
-            value={minVal}
+            value={localMin}
             style={{ width: 34, textAlign: "center" }}
           />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 4 }}>
           <span style={{ fontSize: 10, color: "#888", fontWeight: 600, minWidth: 24 }}>Max</span>
           <input
             type="range"
             min={0}
             max={10}
             step={1}
-            value={maxVal}
+            value={localMax}
             disabled={readOnly}
             onChange={onMaxSliderChange}
+            onMouseUp={commitMaxChange}
+            onTouchEnd={commitMaxChange}
+            onKeyUp={commitMaxChange}
             style={{ flex: 1 }}
           />
           <input
             readOnly
             className="input sm light px-2"
-            value={maxVal}
+            value={localMax}
             style={{ width: 34, textAlign: "center" }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+          <span style={{ fontSize: 9, color: "#64748b", fontWeight: 600 }}>Expert Number</span>
+          <input
+            type="number"
+            className="input sm light px-1"
+            style={{
+              width: 60, fontSize: 10, padding: "2px 2px", textAlign: "center",
+              borderRadius: 4, color: "#334155",
+              border: "1px dashed #cbd5e1",
+            }}
+            value={expertNumber}
+            onChange={onExpertChange}
+            disabled={readOnly}
+            placeholder="opt"
           />
         </div>
       </div>
@@ -119,8 +167,9 @@ export default function Form7({
 
   // Select Component (Range-based)
   const Sel = ({ name }) => (
-    <div>
+    <div id={`${visit}_${name}`}>
       <RangeInput
+        id={`${visit}_${name}`}
         value={scores[name]}
         onChange={handleChange(name)}
         options={CF_OPTS}
@@ -147,7 +196,7 @@ export default function Form7({
                 <thead>
                   <tr>
                     <th className="optional fixed-id" style={{ width: "50px" }}>S/N</th>
-                    <th className="essential persist">Disease Activity</th>
+                    <th className="essential persist">Disease Activity</th> 
                     <th className="optional">Overall Organ Disease Activity (0-10 cm) VAS</th>
                     <th className="optional">Clinical Features (0,1,2,3,4, NA: Not Assessed)</th>
                   </tr>
