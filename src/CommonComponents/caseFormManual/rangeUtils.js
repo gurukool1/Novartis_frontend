@@ -227,6 +227,11 @@ export const transformPayload = (data) => {
 
   for (const [key, val] of Object.entries(data)) {
 
+      if (typeof val === "string") {
+    result[key] = val;
+    continue;
+  }
+
     let min = null;
     let max = null;
     let defaultSelection = null;
@@ -244,34 +249,6 @@ export const transformPayload = (data) => {
           defaultSelection = null; // important rule
         }
       }
-
-      // ─── PRESET CASE ────────────────────────
-      // if ("value" in val) {
-      //   const v = val.value;
-
-      //   if (v === 0) {
-      //     defaultSelection = "0";
-      //   } 
-      //   else if (v === "NA") {
-      //     defaultSelection = "NA";
-      //   } 
-      //   else if (typeof v === "object") {
-      //     const hasZero = v.zero === 0;
-      //     const hasNA = v.na === "NA";
-
-      //     if (hasZero && hasNA) {
-      //       defaultSelection = "0/NA";
-      //     } else if (hasZero) {
-      //       defaultSelection = "0";
-      //     } else if (hasNA) {
-      //       defaultSelection = "NA";
-      //     }
-      //   }
-
-      //   // enforce rule
-      //   min = null;
-      //   max = null;
-      // }
 
 
     if ("value" in val) {
@@ -296,7 +273,7 @@ export const transformPayload = (data) => {
     }
   }
 
-  // DO NOT wipe min/max anymore
+
 }
 
 
